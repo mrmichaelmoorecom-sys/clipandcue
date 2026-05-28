@@ -86,3 +86,7 @@ Resources/                    menu bar template icon + app icon
 Info.plist                    LSUIElement (menu bar agent) bundle config
 scripts/build_app.sh          build + assemble + ad-hoc sign the .app
 ```
+
+## License
+
+[MIT](LICENSE) — free to use, modify, and distribute.
