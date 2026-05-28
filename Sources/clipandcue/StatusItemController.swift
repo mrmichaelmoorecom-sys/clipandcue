@@ -21,15 +21,21 @@ final class StatusItemController: NSObject {
     // MARK: Icon
 
     private func normalIcon() -> NSImage? {
-        if let url = Bundle.main.url(forResource: "menubar-icon", withExtension: "png"),
-           let img = NSImage(contentsOf: url) {
+        // Cowork's branded template ships menubarTemplate.png + @2x; NSImage(named:)
+        // loads both reps and picks the right one per display.
+        if let img = NSImage(named: "menubarTemplate") ?? loadResourcePNG("menubarTemplate") {
             img.isTemplate = true
             img.size = NSSize(width: 18, height: 18)
             return img
         }
-        let img = NSImage(systemSymbolName: "list.clipboard", accessibilityDescription: "clipandcue")
+        let img = NSImage(systemSymbolName: "paperclip", accessibilityDescription: "clipandcue")
         img?.isTemplate = true
         return img
+    }
+
+    private func loadResourcePNG(_ name: String) -> NSImage? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "png") else { return nil }
+        return NSImage(contentsOf: url)
     }
 
     private func configureButton() {

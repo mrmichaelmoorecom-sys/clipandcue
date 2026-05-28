@@ -1,5 +1,10 @@
 .build/
 clipandcue.app/
+*.dmg
 .DS_Store
 *.swiftpm
 .claude/
+img/old/
+
+# Downloaded tooling (UI/UX Pro Max skill)
+_tools/
