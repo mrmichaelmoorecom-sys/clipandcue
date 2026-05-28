@@ -89,4 +89,8 @@ scripts/build_app.sh          build + assemble + ad-hoc sign the .app
 
 ## License
 
-[MIT](LICENSE) — free to use, modify, and distribute.
+© 2026 Michael Moore. clipandcue is licensed under
+[Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](LICENSE).
+
+You're free to use, modify, and share it **for non-commercial purposes**, with
+attribution. **Commercial use is not permitted.**
