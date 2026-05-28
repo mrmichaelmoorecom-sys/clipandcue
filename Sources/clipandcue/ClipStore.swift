@@ -1,0 +1,143 @@
+import Foundation
+import Combine
+
+/// Ordered, capped history of clipboard items (newest first), persisted to disk.
+final class ClipStore: ObservableObject {
+    static let maxItems = 9
+
+    @Published private(set) var items: [ClipItem] = []
+
+    private let supportDir: URL
+    private let blobsDir: URL
+    private let historyURL: URL
+    private var saveWorkItem: DispatchWorkItem?
+
+    init() {
+        let base = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        supportDir = base.appendingPathComponent("clipandcue", isDirectory: true)
+        blobsDir = supportDir.appendingPathComponent("blobs", isDirectory: true)
+        historyURL = supportDir.appendingPathComponent("history.json")
+        try? FileManager.default.createDirectory(at: blobsDir, withIntermediateDirectories: true)
+        load()
+    }
+
+    // MARK: Mutations
+
+    /// Insert a new item at the front, deduping identical content and capping the list.
+    func add(_ item: ClipItem) {
+        items.removeAll { $0.sameContent(as: item) }
+        items.insert(item, at: 0)
+        if items.count > Self.maxItems {
+            items = Array(items.prefix(Self.maxItems))
+        }
+        scheduleSave()
+    }
+
+    func clear() {
+        items.removeAll()
+        scheduleSave()
+    }
+
+    func item(at index: Int) -> ClipItem? {
+        guard items.indices.contains(index) else { return nil }
+        return items[index]
+    }
+
+    // MARK: Persistence
+
+    private struct PersistedItem: Codable {
+        let id: UUID
+        let kind: ClipKind
+        let createdAt: Date
+        let text: String?
+        let imageUTType: String?
+        let pixelWidth: Int?
+        let pixelHeight: Int?
+        let filePaths: [String]?
+        let hasImageData: Bool
+        let hasThumbnail: Bool
+        let hasRTF: Bool
+    }
+
+    private func scheduleSave() {
+        saveWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.save() }
+        saveWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+    }
+
+    private func blobURL(_ id: UUID, _ ext: String) -> URL {
+        blobsDir.appendingPathComponent("\(id.uuidString).\(ext)")
+    }
+
+    private func save() {
+        let fm = FileManager.default
+        try? fm.createDirectory(at: blobsDir, withIntermediateDirectories: true)
+
+        var keep = Set<String>()
+        var dtos: [PersistedItem] = []
+
+        for item in items {
+            if let data = item.imageData {
+                let url = blobURL(item.id, "full")
+                try? data.write(to: url, options: .atomic)
+                keep.insert(url.lastPathComponent)
+            }
+            if let data = item.thumbnailData {
+                let url = blobURL(item.id, "thumb")
+                try? data.write(to: url, options: .atomic)
+                keep.insert(url.lastPathComponent)
+            }
+            if let data = item.rtfData {
+                let url = blobURL(item.id, "rtf")
+                try? data.write(to: url, options: .atomic)
+                keep.insert(url.lastPathComponent)
+            }
+            dtos.append(PersistedItem(
+                id: item.id,
+                kind: item.kind,
+                createdAt: item.createdAt,
+                text: item.text,
+                imageUTType: item.imageUTType,
+                pixelWidth: item.pixelWidth,
+                pixelHeight: item.pixelHeight,
+                filePaths: item.filePaths,
+                hasImageData: item.imageData != nil,
+                hasThumbnail: item.thumbnailData != nil,
+                hasRTF: item.rtfData != nil))
+        }
+
+        // Drop orphaned blob files.
+        if let existing = try? fm.contentsOfDirectory(at: blobsDir, includingPropertiesForKeys: nil) {
+            for url in existing where !keep.contains(url.lastPathComponent) {
+                try? fm.removeItem(at: url)
+            }
+        }
+
+        if let data = try? JSONEncoder().encode(dtos) {
+            try? data.write(to: historyURL, options: .atomic)
+        }
+    }
+
+    private func load() {
+        guard let data = try? Data(contentsOf: historyURL),
+              let dtos = try? JSONDecoder().decode([PersistedItem].self, from: data) else {
+            return
+        }
+        items = dtos.map { dto in
+            ClipItem(
+                kind: dto.kind,
+                id: dto.id,
+                createdAt: dto.createdAt,
+                text: dto.text,
+                rtfData: dto.hasRTF ? (try? Data(contentsOf: blobURL(dto.id, "rtf"))) : nil,
+                imageData: dto.hasImageData ? (try? Data(contentsOf: blobURL(dto.id, "full"))) : nil,
+                imageUTType: dto.imageUTType,
+                thumbnailData: dto.hasThumbnail ? (try? Data(contentsOf: blobURL(dto.id, "thumb"))) : nil,
+                pixelWidth: dto.pixelWidth,
+                pixelHeight: dto.pixelHeight,
+                filePaths: dto.filePaths)
+        }
+    }
+}

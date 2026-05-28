@@ -1,0 +1,5 @@
+.build/
+clipandcue.app/
+.DS_Store
+*.swiftpm
+.claude/
