@@ -1,5 +1,7 @@
 # clipandcue
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-blue.svg)](LICENSE)
+
 A tiny macOS menu bar utility that remembers your last **9 clipboard copies** so you
 can paste any of them back — by clicking a numbered row in the menu, or pressing
 **⌘⌥V** and hitting **1–9**.
