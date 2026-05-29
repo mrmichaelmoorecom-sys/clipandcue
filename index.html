@@ -317,8 +317,8 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
       <use class="main" href="#clip" x="38" y="26" width="58" height="64" color="#7d4f5c"/>
     </svg>
     <h1><span class="word">clip</span> <span class="word">and</span> <span class="word">cue</span></h1>
-    <div class="shead" style="margin:26px auto 0">
-      <div class="kicker">what it does</div>
+    <div class="shead" style="margin:48px auto 0">
+      <div class="kicker">what it is, is what it is</div>
       <h2>Copy now. Paste later.</h2>
       <p>Your clipboard only holds one thing at a time. Let's fix that.</p>
     </div>
@@ -338,14 +338,14 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 <section id="what" class="pad">
   <div class="wrap">
     <div class="shead reveal">
-      <div class="kicker">the essentials</div>
+      <div class="kicker">big paste energy</div>
       <h2>Small app. Big memory.</h2>
       <p>Four small things it does so you never lose a copy again.</p>
     </div>
     <div class="cards">
       <div class="card reveal">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h6"/></svg></div>
-        <h3>Remembers 9 copies</h3>
+        <h3>Remembers copies</h3>
         <p>Every copy slides into a numbered history. Re-copy something and it jumps back to the top — no duplicates.</p>
       </div>
       <div class="card reveal">
@@ -426,11 +426,10 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
         <p>clip and cue drops the item straight into the app you were just using — no extra ⌘V needed. (First time, macOS will ask for Accessibility access so it can paste for you.)</p>
       </div>
       <div class="demo">
-        <div class="macwin" style="max-width:340px">
-          <div class="macbar"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span><span class="ttl">Untitled — Notes</span></div>
-          <div style="padding:22px 18px;min-height:150px;font-size:14.5px;color:var(--ink)">
-            Hey team — pasting the link now:<br>
-            <span id="typetarget" style="color:var(--rose-deep);font-weight:600"></span><span class="caret" id="caret">▌</span>
+        <div class="macwin" style="max-width:380px;background:#1e1e22">
+          <div class="macbar" style="background:#2c2c31;border-bottom-color:rgba(0,0,0,.4)"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span><span class="ttl" style="color:#cfc9cc">mike — -zsh — 80×24</span></div>
+          <div style="padding:18px;min-height:150px;font:13px/1.8 ui-monospace,Menlo,monospace;color:#e8e6e9;word-break:break-all">
+            <span style="color:#8fd98f">mike@mac</span> <span style="color:#8ab4f8">~</span> % export API_KEY="<span id="typetarget" style="color:#ffd479"></span><span class="caret" id="caret" style="color:#e8e6e9">▌</span>"
           </div>
         </div>
       </div>
@@ -443,8 +442,8 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
   <div class="wrap">
     <div class="shead reveal">
       <div class="kicker">captures everything</div>
-      <h2>If you can copy it, it&nbsp;remembers&nbsp;it</h2>
-      <p>One little paperclip, holding onto whatever you throw at it.</p>
+      <h2>If you can copy it, you&nbsp;can&nbsp;cue&nbsp;it</h2>
+      <p>Go on, it's ok to keep copying, pretty much anything.</p>
     </div>
     <div class="capband reveal">
       <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg> Plain text</span>
@@ -597,7 +596,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 
   /* step 3 typewriter */
   var tt = document.getElementById('typetarget'), caret=document.getElementById('caret');
-  var str = 'https://clipandcue.com/download';
+  var str = 'sk_live_FAKE_demo_key_123';
   var step3 = tt && tt.closest('.step');
   if(tt){
     var typed=false;
