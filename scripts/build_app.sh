@@ -36,8 +36,15 @@ if [[ -f "$APP/Contents/Resources/AppIcon.icns" ]]; then
     /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string AppIcon" "$APP/Contents/Info.plist" 2>/dev/null || true
 fi
 
-echo "==> ad-hoc codesign"
-codesign --force --deep --sign - "$APP"
+if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
+    echo "==> codesign (Developer ID, hardened runtime)"
+    codesign --force --deep --options runtime --timestamp \
+        --entitlements "$ROOT/entitlements.plist" \
+        --sign "$CODESIGN_IDENTITY" "$APP"
+else
+    echo "==> ad-hoc codesign"
+    codesign --force --deep --sign - "$APP"
+fi
 
 echo "==> done: $APP"
 echo "    Move it to /Applications and launch, or run: open \"$APP\""
