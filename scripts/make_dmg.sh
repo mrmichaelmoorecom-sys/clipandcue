@@ -10,7 +10,7 @@ APP_NAME="clipandcue"
 APP="$ROOT/$APP_NAME.app"
 VOL="clipandcue"
 DMG_FINAL="$ROOT/$APP_NAME.dmg"
-BG_SRC="$ROOT/Resources/dmg-background.png"
+BG_SRC="$ROOT/Resources/dmg-background.tiff"
 
 [[ -d "$APP" ]] || { echo "error: $APP not found — run scripts/build_app.sh first" >&2; exit 1; }
 [[ -f "$BG_SRC" ]] || { echo "error: $BG_SRC not found" >&2; exit 1; }
@@ -27,7 +27,7 @@ echo "==> staging contents"
 cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 mkdir "$STAGING/.background"
-cp "$BG_SRC" "$STAGING/.background/background.png"
+cp "$BG_SRC" "$STAGING/.background/background.tiff"
 [[ -f "$ROOT/dmg/Read Me.txt" ]] && cp "$ROOT/dmg/Read Me.txt" "$STAGING/Read Me.txt"
 
 SIZE_MB=$(( $(du -sk "$STAGING" | cut -f1) / 1024 + 20 ))
@@ -54,7 +54,7 @@ tell application "Finder"
     set arrangement of theOptions to not arranged
     set icon size of theOptions to 128
     set text size of theOptions to 13
-    set background picture of theOptions to file ".background:background.png"
+    set background picture of theOptions to file ".background:background.tiff"
     -- Position by name match: the .app extension is hidden, so exact-name lookups miss.
     repeat with anItem in (get items of container window)
       set nm to name of anItem

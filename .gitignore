@@ -5,6 +5,7 @@ clipandcue.app/
 *.swiftpm
 .claude/
 img/old/
+scripts/fonts/
 
 # Downloaded tooling (UI/UX Pro Max skill)
 _tools/
