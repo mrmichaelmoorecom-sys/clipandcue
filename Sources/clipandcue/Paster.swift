@@ -46,7 +46,9 @@ final class Paster {
         case .text:
             if let t = item.text { pb.setString(t, forType: .string) }
         case .richText:
-            if let rtf = item.rtfData { pb.setData(rtf, forType: .rtf) }
+            if !AppSettings.shared.pasteAsPlainText, let rtf = item.rtfData {
+                pb.setData(rtf, forType: .rtf)
+            }
             if let t = item.text { pb.setString(t, forType: .string) }
         case .image:
             if let data = item.imageData {

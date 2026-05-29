@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var quickPaste: QuickPasteController!
     private var hotkey: GlobalHotkey!
     private var prefsWindow: NSWindow?
+    private var howToWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Notifier.shared.requestAuthorization()
@@ -16,6 +17,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
         sc.onPreferences = { [weak self] in self?.openPreferences() }
+        sc.onHowTo = { [weak self] in self?.openHowTo() }
+        sc.onNewNote = { [weak self] in
+            guard let self else { return }
+            NoteExporter.exportToNewNote(self.store.items)
+        }
         statusController = sc
 
         let qp = QuickPasteController(store: store)
@@ -36,6 +42,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         monitor = m
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        if settings.clearOnQuit {
+            store.purgePersistedNow()
+        }
+    }
+
     private func paste(index: Int) {
         guard let item = store.item(at: index) else { return }
         Paster.shared.deliver(item, autoPaste: settings.autoPaste)
@@ -43,15 +55,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func openPreferences() {
         if prefsWindow == nil {
-            let host = NSHostingController(rootView: PreferencesView(store: store))
+            let root = PreferencesView(store: store, onHowTo: { [weak self] in self?.openHowTo() })
+            let host = NSHostingController(rootView: root)
+            host.sizingOptions = [.preferredContentSize]
             let win = NSWindow(contentViewController: host)
-            win.title = "clipandcue Preferences"
+            win.title = "clip and cue Preferences"
             win.styleMask = [.titled, .closable]
             win.isReleasedWhenClosed = false
             prefsWindow = win
         }
+        show(prefsWindow)
+    }
+
+    private func openHowTo() {
+        if howToWindow == nil {
+            let host = NSHostingController(rootView: HowToView())
+            host.sizingOptions = [.preferredContentSize]
+            let win = NSWindow(contentViewController: host)
+            win.title = "How to use clip and cue"
+            win.styleMask = [.titled, .closable]
+            win.isReleasedWhenClosed = false
+            howToWindow = win
+        }
+        show(howToWindow)
+    }
+
+    private func show(_ window: NSWindow?) {
         NSApp.activate(ignoringOtherApps: true)
-        prefsWindow?.center()
-        prefsWindow?.makeKeyAndOrderFront(nil)
+        window?.center()
+        window?.makeKeyAndOrderFront(nil)
     }
 }

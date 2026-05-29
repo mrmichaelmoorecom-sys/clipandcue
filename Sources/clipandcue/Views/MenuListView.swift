@@ -5,7 +5,9 @@ struct MenuListView: View {
     @ObservedObject var store: ClipStore
     var onPick: (Int) -> Void
     var onClear: () -> Void
+    var onNewNote: () -> Void
     var onPreferences: () -> Void
+    var onHowTo: () -> Void
     var onQuit: () -> Void
 
     @State private var hoverIndex: Int? = nil
@@ -24,7 +26,7 @@ struct MenuListView: View {
             Divider()
             footer
         }
-        .frame(width: 320)
+        .frame(width: 380)
     }
 
     private var header: some View {
@@ -72,10 +74,13 @@ struct MenuListView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 8) {
             FooterButton(title: "Clear", systemImage: "trash", action: onClear)
                 .disabled(store.items.isEmpty)
+            FooterButton(title: "New note", systemImage: "square.and.pencil", action: onNewNote)
+                .disabled(store.items.isEmpty)
             Spacer()
+            FooterButton(title: "How to", systemImage: "questionmark.circle", action: onHowTo)
             FooterButton(title: "Preferences", systemImage: "gearshape", action: onPreferences)
             FooterButton(title: "Quit", systemImage: "power", action: onQuit)
         }
@@ -92,7 +97,7 @@ private struct FooterButton: View {
     var body: some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
-                .font(.caption)
+                .font(.caption2)
                 .labelStyle(.titleAndIcon)
         }
         .buttonStyle(.plain)

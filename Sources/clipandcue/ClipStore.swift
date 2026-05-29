@@ -24,19 +24,37 @@ final class ClipStore: ObservableObject {
 
     // MARK: Mutations
 
+    /// Effective cap: user's preference, clamped to the hard maximum.
+    private var limit: Int { min(Self.maxItems, max(1, AppSettings.shared.historySize)) }
+
     /// Insert a new item at the front, deduping identical content and capping the list.
     func add(_ item: ClipItem) {
         items.removeAll { $0.sameContent(as: item) }
         items.insert(item, at: 0)
-        if items.count > Self.maxItems {
-            items = Array(items.prefix(Self.maxItems))
+        if items.count > limit {
+            items = Array(items.prefix(limit))
         }
+        scheduleSave()
+    }
+
+    /// Trim to the current history-size preference (call after the user changes it).
+    func enforceLimit() {
+        guard items.count > limit else { return }
+        items = Array(items.prefix(limit))
         scheduleSave()
     }
 
     func clear() {
         items.removeAll()
         scheduleSave()
+    }
+
+    /// Synchronously wipe in-memory items and on-disk data (used on quit).
+    func purgePersistedNow() {
+        items.removeAll()
+        saveWorkItem?.cancel()
+        try? FileManager.default.removeItem(at: historyURL)
+        try? FileManager.default.removeItem(at: blobsDir)
     }
 
     func item(at index: Int) -> ClipItem? {
