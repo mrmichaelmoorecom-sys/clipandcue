@@ -9,31 +9,10 @@ them back.
 INSTALL
 --------------------------------------------------
 Drag the clip and cue icon onto the Applications folder
-(follow the arrow above).
+(follow the arrow above), then open it from Applications.
 
-
-FIRST LAUNCH — PLEASE READ
---------------------------------------------------
-clip and cue isn't notarized by Apple yet, so the first time you
-open it macOS may say:
-
-    "clipandcue.app Not Opened —
-     Apple could not verify it is free of malware."
-
-This is expected for a small independent app. Here's how to open it:
-
-macOS Sequoia (15) and later:
-    1. Double-click clip and cue, then click "Done" on the warning.
-    2. Open  System Settings  →  Privacy & Security.
-    3. Scroll down to the "Security" section. You'll see:
-         "clipandcue.app was blocked to protect your Mac."
-    4. Click "Open Anyway", then confirm and authenticate
-       (Touch ID or your password).
-    clip and cue opens, and won't ask again.
-
-macOS Sonoma (14) and earlier:
-    Right-click (Control-click) clip and cue in Applications,
-    choose "Open", then click "Open" in the dialog.
+This build is signed with a Developer ID and notarized by
+Apple, so it opens normally — no security warning.
 
 
 PERMISSIONS YOU MAY BE ASKED FOR

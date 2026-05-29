@@ -32,10 +32,9 @@ open /Applications/clipandcue.app
 > Installing to `/Applications` matters: macOS only lets **Launch at login**
 > register reliably for an app in a stable location.
 
-Because this is a **personal / unsigned (ad-hoc)** build, the first launch on
-another Mac shows a Gatekeeper warning — right-click the app → **Open** once to
-get past it. (To distribute without that warning, sign with a Developer ID and
-notarize; the build script's `codesign` step is the place to swap the identity.)
+Released builds are **signed with a Developer ID and notarized by Apple**, so they
+open with no Gatekeeper warning. (Local `build_app.sh` builds are ad-hoc signed for
+development; `scripts/notarize.sh` produces the signed + notarized release dmg.)
 
 ## Permissions
 
