@@ -638,5 +638,19 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
   document.getElementById('yr').textContent = new Date().getFullYear();
 })();
 </script>
+<!-- GoatCounter analytics (privacy-friendly, cookieless) -->
+<script data-goatcounter="https://clipandcue.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<script>
+  // Count dmg downloads as a GoatCounter event.
+  (function () {
+    var d = document.getElementById('dlbtn');
+    if (d) d.addEventListener('click', function () {
+      if (window.goatcounter && window.goatcounter.count) {
+        window.goatcounter.count({ path: 'download-dmg', title: 'Download DMG', event: true });
+      }
+    });
+  })();
+</script>
 </body>
 </html>
