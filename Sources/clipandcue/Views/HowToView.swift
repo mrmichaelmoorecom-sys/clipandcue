@@ -55,7 +55,7 @@ struct HowToView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("How to use clip and cue")
                     .font(.title2.bold())
-                Text("Your last 9 copies, one keystroke away.")
+                Text("Copy now. Paste later.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

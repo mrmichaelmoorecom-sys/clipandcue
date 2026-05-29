@@ -36,7 +36,7 @@ func line(_ text: String, font: NSFont, color: NSColor, y: CGFloat) {
     s.draw(at: CGPoint(x: (CGFloat(W) - s.size().width)/2, y: y))
 }
 
-line("Your last 9 copies, one keystroke away",
+line("Copy now. Paste later.",
      font: .systemFont(ofSize: 34, weight: .medium), color: rgb(0x7d,0x4f,0x5c), y: 178)
 line("Free macOS menu bar clipboard manager  ·  clipandcue.com",
      font: .systemFont(ofSize: 23, weight: .regular), color: rgb(0x8a,0x7d,0x82), y: 120)
