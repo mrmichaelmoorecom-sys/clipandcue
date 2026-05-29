@@ -17,16 +17,42 @@
   --max:1080px; --r:18px; --shadow:0 18px 50px -22px rgba(70,40,50,.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Outfit',-apple-system,system-ui,sans-serif;color:var(--ink);background:var(--cream);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{scroll-behavior:smooth;background:var(--cream)}
+body{font-family:'Outfit',-apple-system,system-ui,sans-serif;color:var(--ink);background:transparent;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* animated background field */
+#bgfx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;
+  background:linear-gradient(125deg,#fffdfc 0%,#f7ecef 45%,#fbf3f5 60%,#fffdfc 100%);
+  background-size:240% 240%;animation:wash 26s ease-in-out infinite}
+@keyframes wash{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.blob{position:absolute;border-radius:50%;filter:blur(72px);opacity:.5;will-change:transform,translate}
+.blob.b1{width:540px;height:540px;background:radial-gradient(circle,#f0cdd6,transparent 68%);top:-150px;left:-120px;animation:drift1 28s ease-in-out infinite}
+.blob.b2{width:470px;height:470px;background:radial-gradient(circle,#e7c0cb,transparent 68%);top:34%;right:-170px;animation:drift2 32s ease-in-out infinite}
+.blob.b3{width:620px;height:620px;background:radial-gradient(circle,#f4dade,transparent 68%);bottom:-220px;left:22%;animation:drift1 36s ease-in-out infinite}
+.bgclip{position:absolute;color:var(--rose);opacity:.06;will-change:transform,translate}
+.bgclip.c1{top:11%;left:7%;width:120px;height:120px;rotate:-18deg;animation:drift2 19s ease-in-out infinite}
+.bgclip.c2{top:44%;left:80%;width:170px;height:170px;rotate:24deg;animation:drift1 23s ease-in-out infinite}
+.bgclip.c3{top:73%;left:12%;width:140px;height:140px;rotate:9deg;animation:drift2 27s ease-in-out infinite}
+.bgclip.c4{top:88%;left:66%;width:104px;height:104px;rotate:-8deg;animation:drift1 21s ease-in-out infinite}
+@keyframes drift1{0%,100%{translate:0 0}50%{translate:26px -30px}}
+@keyframes drift2{0%,100%{translate:0 0}50%{translate:-28px 22px}}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--rose),var(--rose-deep));z-index:60;transition:width .08s linear}
+
+/* powered-by credit (top-left) */
+.poweredby{position:fixed;top:14px;left:16px;z-index:55;display:inline-flex;align-items:center;gap:7px;
+  background:rgba(46,42,43,.85);backdrop-filter:blur(8px);color:#fff;text-decoration:none;
+  padding:6px 12px;border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:.04em;
+  transition:opacity .35s ease,transform .35s ease,background .2s}
+.poweredby:hover{background:rgba(46,42,43,.98)}
+.poweredby span{opacity:.78;text-transform:uppercase}
+.poweredby img{height:13px;width:auto;display:block}
+.poweredby.hide{opacity:0;pointer-events:none;transform:translateY(-8px)}
+@media (max-width:520px){.poweredby span{display:none}}
 .serif{font-family:'Instrument Serif',Georgia,serif;font-style:italic}
 a{color:inherit}
 .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 24px}
 h1,h2,h3{line-height:1.08;letter-spacing:-.02em;font-weight:700}
 section{position:relative}
-
-/* scroll progress */
-#progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--rose),var(--rose-deep));z-index:60;transition:width .08s linear}
 
 /* nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
@@ -48,7 +74,7 @@ nav .brand svg{width:26px;height:26px}
 
 /* hero */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-  padding:120px 24px 80px;background:radial-gradient(120% 90% at 50% 0%,var(--rose-tint) 0%,var(--cream) 60%);overflow:hidden}
+  padding:120px 24px 80px;background:radial-gradient(120% 90% at 50% 0%,rgba(233,201,209,.55) 0%,rgba(255,253,252,0) 62%);overflow:hidden}
 .hero .floaters{position:absolute;inset:0;pointer-events:none;z-index:0}
 .hero .floaters svg{position:absolute;color:var(--rose);opacity:.13}
 .hero-inner{position:relative;z-index:2;max-width:760px}
@@ -75,7 +101,7 @@ nav .brand svg{width:26px;height:26px}
 .shead h2{font-size:clamp(30px,4.4vw,46px);margin-top:12px}
 .shead p{color:var(--ink-soft);font-size:18px;margin-top:14px}
 .pad{padding:100px 0}
-.pad-tint{background:var(--rose-tint)}
+.pad-tint{background:rgba(233,201,209,.30)}
 
 /* value cards */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
@@ -149,7 +175,7 @@ nav .brand svg{width:26px;height:26px}
 .callout code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--rose-tint);padding:2px 7px;border-radius:6px}
 
 /* download */
-#download{background:radial-gradient(120% 100% at 50% 100%,var(--rose-tint),var(--cream))}
+#download{background:radial-gradient(120% 100% at 50% 100%,rgba(233,201,209,.42),rgba(255,253,252,0))}
 .dlcard{max-width:620px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:24px;
   box-shadow:var(--shadow);padding:48px 40px;text-align:center}
 .dlcard .dlmark{width:84px;height:84px;margin:0 auto 18px}
@@ -208,6 +234,21 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 
 <div id="progress"></div>
 
+<div id="bgfx" aria-hidden="true">
+  <span class="blob b1" data-speed="0.05"></span>
+  <span class="blob b2" data-speed="0.11"></span>
+  <span class="blob b3" data-speed="0.07"></span>
+  <svg class="bgclip c1" data-speed="0.14" viewBox="0 0 24 24"><use href="#clip" width="24" height="24"/></svg>
+  <svg class="bgclip c2" data-speed="-0.10" viewBox="0 0 24 24"><use href="#clip" width="24" height="24"/></svg>
+  <svg class="bgclip c3" data-speed="0.12" viewBox="0 0 24 24"><use href="#clip" width="24" height="24"/></svg>
+  <svg class="bgclip c4" data-speed="-0.08" viewBox="0 0 24 24"><use href="#clip" width="24" height="24"/></svg>
+</div>
+
+<a class="poweredby" id="poweredby" href="https://www.toyrobotmedia.com" target="_blank" rel="noopener" aria-label="Powered by Toy Robot Media">
+  <span>powered by</span>
+  <img src="img/trmlogo.svg" alt="Toy Robot Media">
+</a>
+
 <!-- shared svg defs -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="clip" viewBox="0 0 24 24">
@@ -225,14 +266,17 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 
 <!-- HERO -->
 <header class="hero">
-  <div class="floaters" id="floaters" aria-hidden="true"></div>
   <div class="hero-inner">
-    <svg class="heromark" viewBox="0 0 108 108" role="img" aria-label="clip and cue logo">
+    <svg class="heromark" data-speed="0.07" viewBox="0 0 108 108" role="img" aria-label="clip and cue logo">
       <use class="ghost" href="#clip" x="20" y="22" width="58" height="64" color="#d9a9b4"/>
       <use class="main" href="#clip" x="38" y="26" width="58" height="64" color="#7d4f5c"/>
     </svg>
-    <div class="eyebrow"><span class="dot"></span>macOS menu bar utility · free for personal use</div>
     <h1><span class="word">clip</span> <span class="word">and</span> <span class="word">cue</span></h1>
+    <div class="shead" style="margin:26px auto 0">
+      <div class="kicker">what it does</div>
+      <h2>Copy now. Paste it back later.</h2>
+      <p>Your clipboard only ever held one thing at a time. Now the last nine wait for you, ready whenever you need them.</p>
+    </div>
     <div class="cta-row">
       <a href="#download" class="btn">Download for macOS</a>
       <a href="#how" class="btn ghost">See how it works</a>
@@ -249,10 +293,9 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 <section id="what" class="pad">
   <div class="wrap">
     <div class="shead reveal">
-      <div class="kicker">what it does</div>
-      <h2>Copy now. Paste it back later.</h2>
-      <p class="tag serif" style="margin-top:16px">your last nine copies, one keystroke away.</p>
-      <p>A tiny menu bar app that quietly remembers your last <strong>9 clipboard copies</strong> — text, images, files — so you can paste any of them back in a tap. No Dock icon. No fuss.</p>
+      <div class="kicker">the essentials</div>
+      <h2>Small app. Big memory.</h2>
+      <p>Four small things it does so you never lose a copy again.</p>
     </div>
     <div class="cards">
       <div class="card reveal">
@@ -354,7 +397,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
   <div class="wrap">
     <div class="shead reveal">
       <div class="kicker">captures everything</div>
-      <h2>If you can copy it, it remembers it</h2>
+      <h2>If you can copy it, it&nbsp;remembers&nbsp;it</h2>
       <p>One little paperclip, holding onto whatever you throw at it.</p>
     </div>
     <div class="capband reveal">
@@ -432,7 +475,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
         <a href="#how">How it works</a>
         <a href="#download">Download</a>
         <a href="LICENSE" target="_blank" rel="noopener">License</a>
-        <a href="https://github.com/" id="ghlink">GitHub</a>
+        <a href="https://github.com/mrmichaelmoorecom-sys/clipandcue/" id="ghlink" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
     <div class="fine">
@@ -447,12 +490,14 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* scroll progress + nav */
-  var nav = document.getElementById('nav'), prog = document.getElementById('progress');
+  var nav = document.getElementById('nav'), prog = document.getElementById('progress'), pb = document.getElementById('poweredby');
   function onScroll(){
     var h = document.documentElement;
     var sc = h.scrollTop, max = h.scrollHeight - h.clientHeight;
     prog.style.width = (max>0 ? (sc/max*100) : 0) + '%';
-    if(sc > window.innerHeight*0.6) nav.classList.add('show'); else nav.classList.remove('show');
+    var past = sc > window.innerHeight*0.6;
+    nav.classList.toggle('show', past);
+    if(pb) pb.classList.toggle('hide', past);
   }
   window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
 
@@ -486,19 +531,21 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
     }, 1100);
   } else if(panel){ panel.querySelector('.prow').classList.add('active'); }
 
-  /* hero floating paperclips */
-  var fl = document.getElementById('floaters');
-  if(fl && !reduce){
-    var positions = [[8,18,46,16],[80,12,34,22],[14,72,30,26],[88,68,40,14],[50,8,26,30],[68,82,30,20]];
-    positions.forEach(function(p,i){
-      var s = document.createElementNS('http://www.w3.org/2000/svg','svg');
-      s.setAttribute('viewBox','0 0 24 24'); s.style.left=p[0]+'%'; s.style.top=p[1]+'%';
-      s.style.width=p[2]+'px'; s.style.height=p[2]+'px';
-      s.style.transform='rotate('+p[3]+'deg)';
-      s.style.animation='bob '+(3+i*0.7)+'s ease-in-out '+(i*0.4)+'s infinite';
-      s.innerHTML='<use href="#clip" width="24" height="24"/>';
-      fl.appendChild(s);
-    });
+  /* scroll parallax — moves [data-speed] layers at different depths */
+  var pxEls = Array.prototype.slice.call(document.querySelectorAll('[data-speed]'));
+  function parallax(){
+    var y = window.pageYOffset || document.documentElement.scrollTop;
+    for(var i=0;i<pxEls.length;i++){
+      var s = parseFloat(pxEls[i].getAttribute('data-speed'));
+      pxEls[i].style.transform = 'translate3d(0,'+(y*s).toFixed(2)+'px,0)';
+    }
+  }
+  if(!reduce && pxEls.length){
+    var pTick=false;
+    window.addEventListener('scroll', function(){
+      if(!pTick){ pTick=true; requestAnimationFrame(function(){ parallax(); pTick=false; }); }
+    }, {passive:true});
+    parallax();
   }
 
   /* step 3 typewriter */
