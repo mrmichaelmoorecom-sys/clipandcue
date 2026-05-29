@@ -1,32 +1,43 @@
 import AppKit
 
 /// Collects the whole history into a single new note in the Notes app.
-/// Text/rich-text becomes text; files/folders become their names (one per line);
-/// images are skipped (a text note can't hold them cleanly).
+/// Text/rich-text becomes text; files/folders become their names; images are
+/// embedded (Notes ingests a base64 data-URI as an image attachment).
 ///
-/// Runs the AppleScript in-process via NSAppleScript so the Automation
-/// permission is attributed to clip and cue itself (paired with
-/// NSAppleEventsUsageDescription in Info.plist). If Notes can't be reached,
-/// it falls back to copying the list to the clipboard.
+/// Runs in-process via NSAppleScript (so Automation permission is attributed to
+/// clip and cue, paired with NSAppleEventsUsageDescription) and reads the body
+/// from a temp file so large embedded images don't bloat the script source.
+/// Falls back to copying a plain-text list to the clipboard if Notes is unreachable.
 enum NoteExporter {
+    /// Skip embedding images whose PNG exceeds this (keeps the note + main thread sane).
+    private static let maxEmbedBytes = 6_000_000
+
     static func exportToNewNote(_ items: [ClipItem]) {
         guard !items.isEmpty else { return }
 
-        let escaped = buildHTML(items)
+        let html = buildHTML(items)
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("clipandcue-note-\(UUID().uuidString).html")
+        guard (try? html.write(to: tmp, atomically: true, encoding: .utf8)) != nil else {
+            fallbackToClipboard(items); return
+        }
+
+        let escapedPath = tmp.path
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
-            .replacingOccurrences(of: "\n", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
-
         let source = """
+        set fh to open for access (POSIX file "\(escapedPath)")
+        set txt to (read fh as «class utf8»)
+        close access fh
         tell application "Notes"
             activate
-            make new note with properties {body:"\(escaped)"}
+            make new note with properties {body:txt}
         end tell
         """
 
         var errorInfo: NSDictionary?
         NSAppleScript(source: source)?.executeAndReturnError(&errorInfo)
+        try? FileManager.default.removeItem(at: tmp)
 
         if let errorInfo {
             NSLog("clipandcue: New note failed (\(errorInfo[NSAppleScript.errorNumber] ?? "?")): "
@@ -35,8 +46,6 @@ enum NoteExporter {
         }
     }
 
-    /// If Notes is unreachable (e.g. Automation permission denied), put the list
-    /// on the clipboard so the action still does something useful.
     private static func fallbackToClipboard(_ items: [ClipItem]) {
         let pb = NSPasteboard.general
         pb.clearContents()
@@ -49,7 +58,7 @@ enum NoteExporter {
         df.dateStyle = .medium
         df.timeStyle = .short
 
-        var imagesSkipped = 0
+        var skipped = 0
         var rows: [String] = []
 
         for (i, item) in items.enumerated() {
@@ -67,22 +76,44 @@ enum NoteExporter {
                     .joined(separator: "<br>")
                 rows.append("<div><b>\(n).</b> \(names)</div>")
             case .image:
-                imagesSkipped += 1
+                if let b64 = pngBase64(item) {
+                    rows.append("<div><b>\(n).</b></div>"
+                                + "<div><img src=\"data:image/png;base64,\(b64)\"></div>")
+                } else {
+                    skipped += 1
+                    rows.append("<div><b>\(n).</b> <i>(image not included)</i></div>")
+                }
             }
         }
 
         var html = "<div><b>clip and cue — \(items.count) item\(items.count == 1 ? "" : "s")</b></div>"
         html += "<div>\(esc(df.string(from: Date())))</div><div><br></div>"
         html += rows.joined(separator: "<div><br></div>")
-        if imagesSkipped > 0 {
-            let s = imagesSkipped == 1 ? "" : "s"
-            html += "<div><br></div><div><i>(\(imagesSkipped) image\(s) not included)</i></div>"
+        if skipped > 0 {
+            html += "<div><br></div><div><i>(\(skipped) image\(skipped == 1 ? "" : "s") "
+                  + "too large to embed)</i></div>"
         }
         return html
     }
 
+    /// PNG base64 for an image item, or nil if it can't be encoded / is too large.
+    private static func pngBase64(_ item: ClipItem) -> String? {
+        guard let data = item.imageData else { return nil }
+        let png: Data
+        if item.imageUTType?.contains("png") == true {
+            png = data
+        } else if let rep = NSBitmapImageRep(data: data),
+                  let p = rep.representation(using: .png, properties: [:]) {
+            png = p
+        } else {
+            return nil
+        }
+        guard png.count <= maxEmbedBytes else { return nil }
+        return png.base64EncodedString()
+    }
+
     private static func buildPlainText(_ items: [ClipItem]) -> String {
-        var imagesSkipped = 0
+        var imageCount = 0
         var lines: [String] = ["clip and cue — \(items.count) item\(items.count == 1 ? "" : "s")", ""]
         for (i, item) in items.enumerated() {
             let n = i + 1
@@ -95,12 +126,13 @@ enum NoteExporter {
                     .joined(separator: "\n    ")
                 lines.append("\(n). \(names)")
             case .image:
-                imagesSkipped += 1
+                imageCount += 1
+                lines.append("\(n). [image]")
             }
         }
-        if imagesSkipped > 0 {
+        if imageCount > 0 {
             lines.append("")
-            lines.append("(\(imagesSkipped) image\(imagesSkipped == 1 ? "" : "s") not included)")
+            lines.append("(images can't be copied as text — open clip and cue to grab them)")
         }
         return lines.joined(separator: "\n")
     }
