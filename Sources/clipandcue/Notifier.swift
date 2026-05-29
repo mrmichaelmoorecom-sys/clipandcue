@@ -23,4 +23,14 @@ final class Notifier {
                                             content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
+
+    func notifyNoteFallback() {
+        guard available else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "Couldn't open Notes"
+        content.body = "Allow clip and cue under System Settings → Privacy & Security → "
+            + "Automation. For now, your list was copied to the clipboard."
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
 }

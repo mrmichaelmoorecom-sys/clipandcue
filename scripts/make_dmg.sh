@@ -28,6 +28,7 @@ cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 mkdir "$STAGING/.background"
 cp "$BG_SRC" "$STAGING/.background/background.png"
+[[ -f "$ROOT/dmg/Read Me.txt" ]] && cp "$ROOT/dmg/Read Me.txt" "$STAGING/Read Me.txt"
 
 SIZE_MB=$(( $(du -sk "$STAGING" | cut -f1) / 1024 + 20 ))
 
@@ -61,6 +62,8 @@ tell application "Finder"
         set position of anItem to {165, 200}
       else if nm is "Applications" then
         set position of anItem to {495, 200}
+      else if nm contains "Read" then
+        set position of anItem to {330, 560}
       else
         set position of anItem to {1600, 1600}
       end if

@@ -1,0 +1,54 @@
+clip and cue — Read Me
+==================================================
+
+Thanks for downloading clip and cue — a tiny menu bar app that
+remembers your last 9 clipboard copies so you can paste any of
+them back.
+
+
+INSTALL
+--------------------------------------------------
+Drag the clip and cue icon onto the Applications folder
+(follow the arrow above).
+
+
+FIRST LAUNCH — PLEASE READ
+--------------------------------------------------
+clip and cue isn't notarized by Apple yet, so the first time you
+open it macOS may say:
+
+    "clipandcue.app Not Opened —
+     Apple could not verify it is free of malware."
+
+This is expected for a small independent app. Here's how to open it:
+
+macOS Sequoia (15) and later:
+    1. Double-click clip and cue, then click "Done" on the warning.
+    2. Open  System Settings  →  Privacy & Security.
+    3. Scroll down to the "Security" section. You'll see:
+         "clipandcue.app was blocked to protect your Mac."
+    4. Click "Open Anyway", then confirm and authenticate
+       (Touch ID or your password).
+    clip and cue opens, and won't ask again.
+
+macOS Sonoma (14) and earlier:
+    Right-click (Control-click) clip and cue in Applications,
+    choose "Open", then click "Open" in the dialog.
+
+
+PERMISSIONS YOU MAY BE ASKED FOR
+--------------------------------------------------
+  • Accessibility — so it can paste into other apps (one-time prompt).
+  • Notes — only if you use "New note" from the menu.
+
+
+USING IT
+--------------------------------------------------
+  • Click the menu bar icon to see your recent copies; click one to paste.
+  • Or press  ⌘⌥V  and tap  1–9.
+
+
+--------------------------------------------------
+Requires macOS 13 (Ventura) or later.
+Free for personal use · CC BY-NC 4.0
+https://clipandcue.com
