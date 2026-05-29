@@ -769,7 +769,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
     }, {threshold:0.35}).observe(el);
   }
 
-  /* step 3.1 — terminal: paste two saved values (1 then 2) */
+  /* step 3.1 — terminal: paste the key, select it, paste 8675309 over it */
   (function(){
     var demo = document.getElementById('termdemo');
     if(!demo) return;
@@ -777,25 +777,28 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
         out = document.getElementById('termout'),
         tcaret = document.getElementById('tcaret'),
         badge = document.getElementById('termbadge');
-    var KEY = 'sk_live_FAKE_demo_key_123', URL = 'https://api.acme.dev';
+    var FAKE = 'sk_live_FAKE_demo_key_123', PIN = '8675309';
+    var head = 'export API_KEY="<span class="key" id="termkey">';
     var timers = [];
     function at(ms, fn){ timers.push(setTimeout(fn, ms)); }
+    function key(){ return document.getElementById('termkey'); }
     function play(){
       timers.forEach(clearTimeout); timers = [];
       cmd.innerHTML = ''; out.innerHTML = ''; tcaret.style.display = ''; badge.classList.remove('show');
-      at(900,  function(){ setNum(badge, 1); badge.classList.add('show'); });
-      at(1800, function(){ badge.classList.remove('show'); cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>"'; });
-      at(2900, function(){ setNum(badge, 2); badge.classList.add('show'); });
-      at(3800, function(){ badge.classList.remove('show'); cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>" API_URL="<span class="key">' + URL + '</span>"'; });
-      at(5000, function(){
+      at(1000, function(){ badge.classList.add('show'); });
+      at(1900, function(){ cmd.innerHTML = head + FAKE + '</span>"'; badge.classList.remove('show'); });
+      at(3100, function(){ var k = key(); if(k) k.classList.add('sel'); });
+      at(4000, function(){ badge.classList.add('show'); });
+      at(4900, function(){ var k = key(); if(k){ k.classList.remove('sel'); k.textContent = PIN; } badge.classList.remove('show'); });
+      at(6100, function(){
         tcaret.style.display = 'none';
         out.innerHTML = '<div><span class="tg">mike@mac</span> <span class="tb">~</span> % ./deploy.sh</div>'
-                      + '<div style="color:#8fd98f">✓ env loaded · deploying…</div>'
+                      + '<div style="color:#8fd98f">✓ key applied · deploying…</div>'
                       + '<div style="color:#8fd98f">✓ done in 1.2s</div>';
       });
-      at(8200, play);
+      at(9200, play);
     }
-    if(reduce){ cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>" API_URL="<span class="key">' + URL + '</span>"'; tcaret.style.display = 'none'; return; }
+    if(reduce){ cmd.innerHTML = head + PIN + '</span>"'; tcaret.style.display = 'none'; return; }
     onSee(demo, play);
   })();
 
