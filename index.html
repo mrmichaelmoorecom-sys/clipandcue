@@ -187,13 +187,13 @@ nav .brand svg{width:26px;height:26px}
 .cliprow .tx small{display:block;color:var(--ink-soft);font-size:11.5px}
 .cliprow.hl{background:var(--rose-tint)}
 .dropfoot{display:flex;justify-content:space-between;padding:9px 14px;font-size:12px;color:var(--ink-soft);background:#faf6f7}
-.termbody{position:relative;padding:18px;min-height:178px;font:13px/1.85 ui-monospace,Menlo,monospace;color:#e8e6e9;word-break:break-all}
+.termbody{position:relative;padding:18px;min-height:351px;font:13px/1.85 ui-monospace,Menlo,monospace;color:#e8e6e9;word-break:break-all}
 .termbody .tg{color:#8fd98f}.termbody .tb{color:#8ab4f8}
 .termbody .key{color:#ffd479}
 .termbody .key.sel{background:#3d6db5;color:#fff;border-radius:2px}
 .tcaret{color:#e8e6e9;animation:termblink 1.1s steps(1) infinite}
 @keyframes termblink{50%{opacity:0}}
-.pastebadge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.86);
+.pastebadge{position:absolute;top:50%;left:50%;z-index:30;transform:translate(-50%,-50%) scale(.86);
   background:rgba(255,255,255,.96);color:#1e1e22;
   font:800 32px/1 -apple-system,system-ui,sans-serif;letter-spacing:.5px;padding:20px 30px;border-radius:16px;
   box-shadow:0 18px 48px -10px rgba(0,0,0,.55);
@@ -218,6 +218,63 @@ nav .brand svg{width:26px;height:26px}
 .chatcompose .composefield{flex:1;border:1px solid #d9d9de;border-radius:16px;padding:7px 13px;font-size:12.5px;color:#9a9a9e}
 .chatcompose .sendbtn{width:27px;height:27px;border-radius:50%;background:#0b84ff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .chatcompose .sendbtn svg{width:15px;height:15px}
+
+/* browser window chrome (shared by contact + dns demos) */
+.browbar{display:flex;align-items:center;gap:9px;padding:9px 12px;background:#f4eef0;border-bottom:1px solid var(--line)}
+.browbar .tl{display:flex;gap:7px;flex-shrink:0}
+.urlbar{flex:1;display:flex;align-items:center;gap:7px;min-width:0;background:#fff;border:1px solid var(--line);
+  border-radius:8px;padding:5px 11px;font-size:12px;color:var(--ink)}
+.urlbar svg{width:13px;height:13px;color:var(--ink-soft);flex-shrink:0}
+.urlbar .utext{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ucaret{color:var(--rose-deep);animation:termblink 1.1s steps(1) infinite}
+.browbody{position:relative;height:236px;overflow:hidden;background:#fff}
+
+/* dns records table (paste a list, in order) */
+.dnsbody{padding:13px 15px}
+.dnstitle{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:9px}
+.dnsgrid{display:grid;grid-template-columns:auto auto 1fr;gap:7px 12px;font-size:12px;align-items:center}
+.dnsh{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+.dnstype{font-weight:700;color:var(--rose-deep)}
+.dnshost{color:var(--ink-soft)}
+.dnsval{display:flex;align-items:center;gap:6px;min-height:26px;background:#faf6f7;border:1px solid var(--line);
+  border-radius:6px;padding:3px 9px;font:12px/1 ui-monospace,Menlo,monospace;color:var(--ink)}
+.dnsval .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dnsval .dot{width:7px;height:7px;border-radius:50%;background:#d8c7cd;flex-shrink:0;margin-left:auto;transition:background .3s ease}
+.dnsval.done .dot{background:#28c840}
+
+/* mood board (dark design app — paste a stack of images, no title bar) */
+.moodbody{position:relative;height:286px;background:#26262c;display:flex}
+.moodrail{width:36px;background:#1b1b20;border-right:1px solid #000;display:flex;flex-direction:column;
+  align-items:center;gap:15px;padding:13px 0;flex-shrink:0}
+.moodrail svg{width:17px;height:17px;color:#8a838f}
+.moodrail svg.on{color:var(--rose)}
+.moodstage{position:relative;flex:1;padding:13px;background:
+  repeating-conic-gradient(#2c2c33 0% 25%, #292930 0% 50%) 0 0/16px 16px}
+.moodcanvas{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:9px;height:100%}
+.tile{position:relative;overflow:hidden;border-radius:7px;opacity:0;transform:scale(.82);
+  transition:opacity .35s ease,transform .35s ease;box-shadow:0 7px 18px -6px rgba(0,0,0,.75)}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.28))}
+.tile.show{opacity:1;transform:scale(1)}
+.tile.t0{background:linear-gradient(135deg,#f6a5b8,#b85c74)}
+.tile.t1{background:linear-gradient(135deg,#8fb6e8,#3f5e8c)}
+.tile.t2{background:linear-gradient(135deg,#f3d28a,#c98f4e)}
+.tile.t3{background:linear-gradient(135deg,#a8dcc0,#4e9c7a)}
+.moodhint{position:absolute;inset:13px;z-index:1;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:#7a737f;border:1.5px dashed #46464f;border-radius:9px;background:rgba(20,20,24,.4);transition:opacity .3s ease}
+.moodhint.gone{opacity:0}
+
+/* step 3 — centered payoff + 2×2 quad of demos */
+.step.payoff{display:block;text-align:center;margin-bottom:0}
+.payoffcopy{max-width:680px;margin:0 auto 52px}
+.step.payoff .stepnum{width:56px;height:56px;font-size:23px;margin-bottom:22px}
+.step.payoff h3{font-size:clamp(34px,5.2vw,58px);line-height:1.05}
+.step.payoff p{font-size:19px;margin:16px auto 0;max-width:580px}
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:34px 30px;max-width:860px;margin:0 auto;align-items:start;text-align:left}
+.quad > div{display:flex;flex-direction:column}
+.quad .macwin{max-width:none}
+.quadcap{order:-1;margin:0 0 14px;min-height:2.3em;display:flex;align-items:flex-end;justify-content:center;
+  font-size:18px;line-height:1.2;font-weight:600;color:var(--ink-soft);text-align:center}
+.quadcap b{color:var(--rose-deep);font-weight:800}
 
 /* command panel mock */
 .panel{width:100%;max-width:360px;background:rgba(46,42,43,.92);backdrop-filter:blur(8px);border-radius:16px;
@@ -298,6 +355,8 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
   .step{grid-template-columns:1fr;gap:30px;margin-bottom:80px}
   .step.rev .copy{order:0}
   .step .demo{min-height:auto}
+  .quad{grid-template-columns:1fr;gap:34px;max-width:420px}
+  .payoffcopy{margin-bottom:38px}
   nav .brand span{display:none}
 }
 @media (prefers-reduced-motion:reduce){
@@ -449,40 +508,97 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
       </div>
     </div>
 
-    <!-- step 3 -->
-    <div class="step reveal">
-      <div class="copy">
+    <!-- step 3 — the payoff -->
+    <div class="step payoff reveal">
+      <div class="payoffcopy">
         <div class="stepnum">3</div>
         <h3>It pastes itself</h3>
         <p>clip and cue drops the item straight into the app you were just using — no extra ⌘V needed. (First time, macOS will ask for Accessibility access so it can paste for you.)</p>
       </div>
-      <div class="demo" style="flex-direction:column;gap:20px">
-        <div class="macwin" id="termdemo" style="max-width:380px;background:#1e1e22">
-          <div class="macbar" style="background:#2c2c31;border-bottom-color:rgba(0,0,0,.4)"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span><span class="ttl" style="color:#cfc9cc">mike — -zsh — 80×24</span></div>
-          <div class="termbody">
-            <div><span class="tg">mike@mac</span> <span class="tb">~</span> % <span id="termcmd"></span><span class="tcaret" id="tcaret">▌</span></div>
-            <div id="termout"></div>
-            <span class="pastebadge" id="pastebadge">⌘⌥V</span>
+
+      <div class="quad">
+        <!-- 3.1 terminal — drop a saved secret -->
+        <div>
+          <div class="macwin" id="termdemo" style="background:#1e1e22">
+            <div class="macbar" style="background:#2c2c31;border-bottom-color:rgba(0,0,0,.4)"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span><span class="ttl" style="color:#cfc9cc">mike — -zsh — 80×24</span></div>
+            <div class="termbody">
+              <div><span class="tg">mike@mac</span> <span class="tb">~</span> % <span id="termcmd"></span><span class="tcaret" id="tcaret">▌</span></div>
+              <div id="termout"></div>
+              <span class="pastebadge" id="termbadge">⌘⌥V</span>
+            </div>
           </div>
+          <div class="quadcap"><span>Drop saved keys into the <b>terminal</b></span></div>
         </div>
-        <div class="macwin chatwin" id="chatdemo" style="max-width:380px">
-          <div class="chathead">
-            <div class="tl"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span></div>
-            <div class="contact"><span class="avatar">T</span> t.tutone</div>
+
+        <!-- 3.2 chat (multi-link paste — kept) -->
+        <div>
+          <div class="macwin chatwin" id="chatdemo">
+            <div class="chathead">
+              <div class="tl"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span></div>
+              <div class="contact"><span class="avatar">T</span> t.tutone</div>
+            </div>
+            <div class="chatbody" id="chatbody">
+              <div class="bub me" data-b="0">I have all the links right here</div>
+              <div class="bub me" data-b="1"><a href="https://www.preshow.link" target="_blank" rel="noopener">www.preshow.link/hesgotmynumber</a></div>
+              <div class="bub me" data-b="2"><a href="https://www.toyrobotmedia.com" target="_blank" rel="noopener">www.toyrobotmedia.com</a></div>
+              <div class="bub me" data-b="3"><a href="https://www.youtube.com/watch?v=6WTdTwcmxyo" target="_blank" rel="noopener">https://www.youtube.com/watch?v=6WTdTwcmxyo</a></div>
+              <div class="bub them typing" data-b="4"><span></span><span></span><span></span></div>
+              <div class="bub them" data-b="5">Thanks for the quick work Jenny</div>
+              <span class="pastebadge" id="chatbadge">⌘⌥V</span>
+            </div>
+            <div class="chatcompose">
+              <div class="composefield">iMessage</div>
+              <div class="sendbtn"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+            </div>
           </div>
-          <div class="chatbody" id="chatbody">
-            <div class="bub me" data-b="0">I have all the links right here</div>
-            <div class="bub me" data-b="1"><a href="https://www.preshow.link" target="_blank" rel="noopener">www.preshow.link/hesgotmynumber</a></div>
-            <div class="bub me" data-b="2"><a href="https://www.toyrobotmedia.com" target="_blank" rel="noopener">www.toyrobotmedia.com</a></div>
-            <div class="bub me" data-b="3"><a href="https://www.youtube.com/watch?v=6WTdTwcmxyo" target="_blank" rel="noopener">https://www.youtube.com/watch?v=6WTdTwcmxyo</a></div>
-            <div class="bub them typing" data-b="4"><span></span><span></span><span></span></div>
-            <div class="bub them" data-b="5">Thanks for the quick work Jenny</div>
-            <span class="pastebadge" id="chatbadge">⌘⌥V</span>
+          <div class="quadcap"><span>Fire a stack of links into a <b>chat</b></span></div>
+        </div>
+
+        <!-- 3.3 mood board (dark design app, images) -->
+        <div>
+          <div class="macwin" id="mooddemo" style="background:#26262c">
+            <div class="moodbody">
+              <div class="moodrail">
+                <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6 16 2-6 6-2z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c2 0 3-1 4-3M14 5l5 5-8 8-4 1 1-4z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M12 6v13"/></svg>
+              </div>
+              <div class="moodstage">
+                <div class="moodhint">Paste your saved images</div>
+                <div class="moodcanvas">
+                  <div class="tile t0" data-i="0"></div>
+                  <div class="tile t1" data-i="1"></div>
+                  <div class="tile t2" data-i="2"></div>
+                  <div class="tile t3" data-i="3"></div>
+                </div>
+              </div>
+              <span class="pastebadge">⌘⌥V</span>
+            </div>
           </div>
-          <div class="chatcompose">
-            <div class="composefield">iMessage</div>
-            <div class="sendbtn"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+          <div class="quadcap"><span>No more tab-grab-tab — paste a stack of <b>images</b></span></div>
+        </div>
+
+        <!-- 3.4 dns records (paste a list, in order) -->
+        <div>
+          <div class="macwin" id="dnsdemo">
+            <div class="browbar">
+              <span class="tl"><span class="dotmac r"></span><span class="dotmac y"></span><span class="dotmac g"></span></span>
+              <span class="urlbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg><span class="utext">dns · clipandcue.com</span></span>
+            </div>
+            <div class="browbody dnsbody">
+              <div class="dnstitle">A records → GitHub Pages</div>
+              <div class="dnsgrid">
+                <div class="dnsh">Type</div><div class="dnsh">Host</div><div class="dnsh">Value</div>
+                <div class="dnstype">A</div><div class="dnshost">@</div><div class="dnsval" data-r="0"><span class="v"></span><span class="dot"></span></div>
+                <div class="dnstype">A</div><div class="dnshost">@</div><div class="dnsval" data-r="1"><span class="v"></span><span class="dot"></span></div>
+                <div class="dnstype">A</div><div class="dnshost">@</div><div class="dnsval" data-r="2"><span class="v"></span><span class="dot"></span></div>
+                <div class="dnstype">A</div><div class="dnshost">@</div><div class="dnsval" data-r="3"><span class="v"></span><span class="dot"></span></div>
+              </div>
+              <span class="pastebadge">⌘⌥V</span>
+            </div>
           </div>
+          <div class="quadcap"><span>A whole list of <b>records</b>, in order</span></div>
         </div>
       </div>
     </div>
@@ -646,43 +762,92 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
     parallax();
   }
 
-  /* step 3 — terminal paste animation */
+  /* helper: set the number on a ⌘⌥V badge, and a one-shot IO trigger */
+  function setNum(badge, n){ var p = badge.querySelector('.pn'); if(p) p.textContent = n; }
+  function onSee(el, fn){
+    var started = false;
+    new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting && !started){ started = true; fn(); } });
+    }, {threshold:0.35}).observe(el);
+  }
+
+  /* step 3.1 — terminal: paste two saved values (1 then 2) */
   (function(){
+    var demo = document.getElementById('termdemo');
+    if(!demo) return;
     var cmd = document.getElementById('termcmd'),
         out = document.getElementById('termout'),
-        badge = document.getElementById('pastebadge'),
         tcaret = document.getElementById('tcaret'),
-        demo = document.getElementById('termdemo');
-    if(!cmd || !demo) return;
-    var FAKE = 'sk_live_FAKE_demo_key_123', PIN = '8675309';
-    var head = 'export API_KEY="<span class="key" id="termkey">';
+        badge = document.getElementById('termbadge');
+    var KEY = 'sk_live_FAKE_demo_key_123', URL = 'https://api.acme.dev';
     var timers = [];
     function at(ms, fn){ timers.push(setTimeout(fn, ms)); }
-    function key(){ return document.getElementById('termkey'); }
     function play(){
       timers.forEach(clearTimeout); timers = [];
       cmd.innerHTML = ''; out.innerHTML = ''; tcaret.style.display = ''; badge.classList.remove('show');
-      at(1000, function(){ badge.classList.add('show'); });
-      at(1900, function(){ cmd.innerHTML = head + FAKE + '</span>"'; badge.classList.remove('show'); });
-      at(3100, function(){ var k = key(); if(k) k.classList.add('sel'); });
-      at(4000, function(){ badge.classList.add('show'); });
-      at(4900, function(){ var k = key(); if(k){ k.classList.remove('sel'); k.textContent = PIN; } badge.classList.remove('show'); });
-      at(6100, function(){
+      at(900,  function(){ setNum(badge, 1); badge.classList.add('show'); });
+      at(1800, function(){ badge.classList.remove('show'); cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>"'; });
+      at(2900, function(){ setNum(badge, 2); badge.classList.add('show'); });
+      at(3800, function(){ badge.classList.remove('show'); cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>" API_URL="<span class="key">' + URL + '</span>"'; });
+      at(5000, function(){
         tcaret.style.display = 'none';
         out.innerHTML = '<div><span class="tg">mike@mac</span> <span class="tb">~</span> % ./deploy.sh</div>'
-                      + '<div style="color:#8fd98f">✓ key applied · deploying…</div>'
+                      + '<div style="color:#8fd98f">✓ env loaded · deploying…</div>'
                       + '<div style="color:#8fd98f">✓ done in 1.2s</div>';
       });
-      at(9200, play);
+      at(8200, play);
     }
-    if(reduce){ cmd.innerHTML = head + PIN + '</span>"'; tcaret.style.display = 'none'; return; }
-    var started = false;
-    new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting && !started){ started = true; play(); } });
-    }, {threshold:0.4}).observe(demo);
+    if(reduce){ cmd.innerHTML = 'export API_KEY="<span class="key">' + KEY + '</span>" API_URL="<span class="key">' + URL + '</span>"'; tcaret.style.display = 'none'; return; }
+    onSee(demo, play);
   })();
 
-  /* step 4 — chat paste animation */
+  /* step 3.2 — mood board: paste a stack of images (1,2,3,4) */
+  (function(){
+    var demo = document.getElementById('mooddemo');
+    if(!demo) return;
+    var badge = demo.querySelector('.pastebadge'),
+        hint = demo.querySelector('.moodhint'),
+        tiles = [0,1,2,3].map(function(i){ return demo.querySelector('.tile[data-i="'+i+'"]'); });
+    var timers = [];
+    function at(ms, fn){ timers.push(setTimeout(fn, ms)); }
+    function play(){
+      timers.forEach(clearTimeout); timers = [];
+      tiles.forEach(function(t){ t.classList.remove('show'); });
+      hint.classList.remove('gone'); badge.classList.remove('show');
+      [0,1,2,3].forEach(function(i){
+        at(700 + i*1300, function(){ setNum(badge, i+1); badge.classList.add('show'); });
+        at(1400 + i*1300, function(){ badge.classList.remove('show'); tiles[i].classList.add('show'); if(i===0) hint.classList.add('gone'); });
+      });
+      at(8800, play);
+    }
+    if(reduce){ tiles.forEach(function(t){ t.classList.add('show'); }); hint.classList.add('gone'); return; }
+    onSee(demo, play);
+  })();
+
+  /* step 3.3 — DNS records: paste a whole list, in order (1,2,3,4) */
+  (function(){
+    var demo = document.getElementById('dnsdemo');
+    if(!demo) return;
+    var badge = demo.querySelector('.pastebadge'),
+        rows = [0,1,2,3].map(function(i){ return demo.querySelector('.dnsval[data-r="'+i+'"]'); });
+    var IPS = ['185.199.108.153','185.199.109.153','185.199.110.153','185.199.111.153'];
+    var timers = [];
+    function at(ms, fn){ timers.push(setTimeout(fn, ms)); }
+    function play(){
+      timers.forEach(clearTimeout); timers = [];
+      rows.forEach(function(r){ r.querySelector('.v').textContent = ''; r.classList.remove('done'); });
+      badge.classList.remove('show');
+      [0,1,2,3].forEach(function(i){
+        at(700 + i*1300, function(){ setNum(badge, i+1); badge.classList.add('show'); });
+        at(1400 + i*1300, function(){ badge.classList.remove('show'); rows[i].querySelector('.v').textContent = IPS[i]; rows[i].classList.add('done'); });
+      });
+      at(8800, play);
+    }
+    if(reduce){ rows.forEach(function(r,i){ r.querySelector('.v').textContent = IPS[i]; r.classList.add('done'); }); return; }
+    onSee(demo, play);
+  })();
+
+  /* step 3.4 — chat: fire a stack of links (1,2,3) */
   (function(){
     var chat = document.getElementById('chatdemo');
     if(!chat) return;
@@ -697,21 +862,18 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
       bubs.forEach(function(b){ b.classList.remove('show'); });
       badge.classList.remove('show');
       at(700,  function(){ show(0); });
-      at(1500, function(){ badge.classList.add('show'); });
+      at(1500, function(){ setNum(badge, 1); badge.classList.add('show'); });
       at(2300, function(){ badge.classList.remove('show'); show(1); });
-      at(3000, function(){ badge.classList.add('show'); });
+      at(3000, function(){ setNum(badge, 2); badge.classList.add('show'); });
       at(3800, function(){ badge.classList.remove('show'); show(2); });
-      at(4500, function(){ badge.classList.add('show'); });
+      at(4500, function(){ setNum(badge, 3); badge.classList.add('show'); });
       at(5300, function(){ badge.classList.remove('show'); show(3); });
       at(6200, function(){ show(4); });
       at(7500, function(){ hide(4); show(5); });
       at(10200, play);
     }
     if(reduce){ bubs.forEach(function(b){ if(b.getAttribute('data-b') !== '4') b.classList.add('show'); }); return; }
-    var started = false;
-    new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting && !started){ started = true; play(); } });
-    }, {threshold:0.35}).observe(chat);
+    onSee(chat, play);
   })();
 
   /* T&C gate */
