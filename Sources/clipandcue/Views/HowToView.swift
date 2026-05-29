@@ -28,6 +28,12 @@ struct HowToView: View {
                     .padding(.top, 2)
                 }
 
+                stepCard(symbol: "pin", title: "Pin your favorites") {
+                    Text("Click the ")
+                    + Text("number badge").bold()
+                    + Text(" on a row in the menu to pin it — pinned items jump to the top and stay there, even as you keep copying. Click the badge again to unpin.")
+                }
+
                 stepCard(symbol: "hand.raised", title: "First time: allow pasting") {
                     Text("To paste into other apps, macOS asks you to allow clip and cue under ")
                     + Text("System Settings → Privacy & Security → Accessibility").bold()

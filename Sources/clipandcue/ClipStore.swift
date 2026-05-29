@@ -27,12 +27,31 @@ final class ClipStore: ObservableObject {
     /// Effective cap: user's preference, clamped to the hard maximum.
     private var limit: Int { min(Self.maxItems, max(1, AppSettings.shared.historySize)) }
 
-    /// Insert a new item at the front, deduping identical content and capping the list.
+    /// Insert a new item at the top of the unpinned section (pinned items stay
+    /// above it), deduping identical content and capping the list.
     func add(_ item: ClipItem) {
+        // Preserve pin state if we already had this exact content.
+        let wasPinned = items.first { $0.sameContent(as: item) }?.pinned ?? false
         items.removeAll { $0.sameContent(as: item) }
-        items.insert(item, at: 0)
-        if items.count > limit {
-            items = Array(items.prefix(limit))
+        var item = item
+        item.pinned = wasPinned
+        let insertAt = item.pinned ? 0 : (items.firstIndex { !$0.pinned } ?? items.count)
+        items.insert(item, at: insertAt)
+        enforceCap()
+        scheduleSave()
+    }
+
+    /// Pin/unpin an item. Pinning jumps it to the very top; unpinning drops it
+    /// to the top of the unpinned section. Pinned items survive eviction.
+    func togglePin(id: UUID) {
+        guard let idx = items.firstIndex(where: { $0.id == id }) else { return }
+        var it = items.remove(at: idx)
+        it.pinned.toggle()
+        if it.pinned {
+            items.insert(it, at: 0)
+        } else {
+            let at = items.firstIndex { !$0.pinned } ?? items.count
+            items.insert(it, at: at)
         }
         scheduleSave()
     }
@@ -40,8 +59,16 @@ final class ClipStore: ObservableObject {
     /// Trim to the current history-size preference (call after the user changes it).
     func enforceLimit() {
         guard items.count > limit else { return }
-        items = Array(items.prefix(limit))
+        enforceCap()
         scheduleSave()
+    }
+
+    /// Drop oldest *unpinned* items until within the limit (pinned are protected).
+    private func enforceCap() {
+        while items.count > limit, let idx = items.lastIndex(where: { !$0.pinned }) {
+            items.remove(at: idx)
+        }
+        if items.count > limit { items = Array(items.prefix(limit)) }
     }
 
     func clear() {
@@ -76,6 +103,7 @@ final class ClipStore: ObservableObject {
         let hasImageData: Bool
         let hasThumbnail: Bool
         let hasRTF: Bool
+        let pinned: Bool?   // optional for backward-compat with pre-pin history.json
     }
 
     private func scheduleSave() {
@@ -123,7 +151,8 @@ final class ClipStore: ObservableObject {
                 filePaths: item.filePaths,
                 hasImageData: item.imageData != nil,
                 hasThumbnail: item.thumbnailData != nil,
-                hasRTF: item.rtfData != nil))
+                hasRTF: item.rtfData != nil,
+                pinned: item.pinned))
         }
 
         // Drop orphaned blob files.
@@ -155,7 +184,8 @@ final class ClipStore: ObservableObject {
                 thumbnailData: dto.hasThumbnail ? (try? Data(contentsOf: blobURL(dto.id, "thumb"))) : nil,
                 pixelWidth: dto.pixelWidth,
                 pixelHeight: dto.pixelHeight,
-                filePaths: dto.filePaths)
+                filePaths: dto.filePaths,
+                pinned: dto.pinned ?? false)
         }
     }
 }

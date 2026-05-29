@@ -25,7 +25,7 @@ struct QuickPasteHUDView: View {
                                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                                     .fill(idx == model.selection
                                           ? Color.accentColor.opacity(0.28)
-                                          : Color.clear)
+                                          : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
                             )
                             .contentShape(Rectangle())
                             .onTapGesture { onPick(idx) }

@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// A keyboard-shortcut number badge (1–9).
+/// A keyboard-shortcut number badge (1–9). Turns accent-filled with a pin
+/// glyph when the item is pinned (a favorite).
 struct NumberBadge: View {
     let number: Int
     var large: Bool = false
+    var pinned: Bool = false
 
     var body: some View {
         Text("\(number)")
@@ -12,9 +14,19 @@ struct NumberBadge: View {
             .frame(width: large ? 26 : 20, height: large ? 26 : 20)
             .background(
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(Color.secondary.opacity(0.18))
+                    .fill(pinned ? Color.accentColor : Color.secondary.opacity(0.18))
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(pinned ? Color.white : Color.secondary)
+            .overlay(alignment: .topTrailing) {
+                if pinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: large ? 9 : 7, weight: .bold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(1.5)
+                        .background(Circle().fill(Color(nsColor: .windowBackgroundColor)))
+                        .offset(x: large ? 5 : 4, y: large ? -5 : -4)
+                }
+            }
     }
 }
 
@@ -23,12 +35,14 @@ struct ClipRowView: View {
     let index: Int
     let item: ClipItem
     var large: Bool = false
+    /// When set, the number badge becomes a button that pins/unpins the item.
+    var onTogglePin: (() -> Void)? = nil
 
     private var thumbSide: CGFloat { large ? 40 : 26 }
 
     var body: some View {
         HStack(spacing: 10) {
-            NumberBadge(number: index + 1, large: large)
+            badge
 
             preview
                 .frame(width: thumbSide, height: thumbSide)
@@ -47,6 +61,19 @@ struct ClipRowView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, large ? 8 : 6)
         .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var badge: some View {
+        if let onTogglePin {
+            Button(action: onTogglePin) {
+                NumberBadge(number: index + 1, large: large, pinned: item.pinned)
+            }
+            .buttonStyle(.plain)
+            .help(item.pinned ? "Unpin" : "Pin to top")
+        } else {
+            NumberBadge(number: index + 1, large: large, pinned: item.pinned)
+        }
     }
 
     @ViewBuilder

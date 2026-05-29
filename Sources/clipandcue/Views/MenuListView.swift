@@ -47,8 +47,11 @@ struct MenuListView: View {
         ScrollView {
             VStack(spacing: 0) {
                 ForEach(Array(store.items.enumerated()), id: \.element.id) { idx, item in
-                    ClipRowView(index: idx, item: item)
-                        .background(hoverIndex == idx ? Color.accentColor.opacity(0.15) : Color.clear)
+                    ClipRowView(index: idx, item: item,
+                                onTogglePin: { store.togglePin(id: item.id) })
+                        .background(hoverIndex == idx
+                                    ? Color.accentColor.opacity(0.15)
+                                    : (item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
                         .onHover { inside in hoverIndex = inside ? idx : (hoverIndex == idx ? nil : hoverIndex) }
                         .onTapGesture { onPick(idx) }
                 }

@@ -29,6 +29,9 @@ struct ClipItem: Identifiable {
     // files (security-scoped paths copied from Finder)
     var filePaths: [String]?
 
+    /// User-pinned (favorite): sorted to the top and protected from eviction.
+    var pinned: Bool = false
+
     init(kind: ClipKind,
          id: UUID = UUID(),
          createdAt: Date = Date(),
@@ -39,7 +42,8 @@ struct ClipItem: Identifiable {
          thumbnailData: Data? = nil,
          pixelWidth: Int? = nil,
          pixelHeight: Int? = nil,
-         filePaths: [String]? = nil) {
+         filePaths: [String]? = nil,
+         pinned: Bool = false) {
         self.id = id
         self.kind = kind
         self.createdAt = createdAt
@@ -51,6 +55,7 @@ struct ClipItem: Identifiable {
         self.pixelWidth = pixelWidth
         self.pixelHeight = pixelHeight
         self.filePaths = filePaths
+        self.pinned = pinned
     }
 
     /// Approximate stored byte size, used for the size cap.
