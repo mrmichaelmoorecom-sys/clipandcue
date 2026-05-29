@@ -102,7 +102,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
   transform:translateY(-110%);transition:transform .4s ease,border-color .4s}
 nav.show{transform:translateY(0);border-color:var(--line)}
 nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px;letter-spacing:-.02em}
-nav .brand svg{width:26px;height:26px}
+nav .brand svg,nav .brand img{width:28px;height:28px;border-radius:7px}
 .btn{display:inline-flex;align-items:center;gap:9px;border:none;border-radius:999px;cursor:pointer;
   font-family:inherit;font-weight:600;font-size:15px;padding:11px 22px;background:var(--ink);color:#fff;
   transition:transform .18s ease,box-shadow .25s ease,opacity .2s,background .2s;text-decoration:none}
@@ -120,8 +120,9 @@ nav .brand svg{width:26px;height:26px}
 .hero .floaters{position:absolute;inset:0;pointer-events:none;z-index:0}
 .hero .floaters svg{position:absolute;color:var(--rose);opacity:.13}
 .hero-inner{position:relative;z-index:2;max-width:760px}
-.heromark{width:128px;height:128px;margin:0 auto 8px;display:block}
+.heromark{width:128px;height:128px;margin:0 auto 8px;display:block;filter:drop-shadow(0 8px 16px rgba(125,79,92,.30))}
 .heromark .ghost{transform-origin:54px 54px}
+.herodiv{width:375px;height:4px;border-radius:3px;background:var(--rose-deep);margin:0 auto;opacity:.85}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--rose-deep);
   background:#fff;border:1px solid var(--line);padding:6px 14px;border-radius:999px;margin-bottom:22px}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 0 var(--rose);animation:pulse 2.4s infinite}
@@ -393,7 +394,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 
 <nav id="nav" aria-label="Primary">
   <div class="brand">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#clip" x="34" y="22" width="34" height="56" color="#b58592" opacity=".4"/><use href="#clip" x="46" y="26" width="34" height="56" color="#7d4f5c"/></svg>
+    <img src="img/appicon_256.png" alt="" aria-hidden="true">
     <span>clip and cue</span>
   </div>
   <a href="#download" class="btn">Download</a>
@@ -402,13 +403,10 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 <!-- HERO -->
 <header class="hero">
   <div class="hero-inner">
-    <svg class="heromark" data-speed="0.07" viewBox="0 0 108 108" role="img" aria-label="clip and cue logo">
-      <use class="ghost" href="#clip" x="20" y="22" width="58" height="64" color="#d9a9b4"/>
-      <use class="main" href="#clip" x="38" y="26" width="58" height="64" color="#7d4f5c"/>
-    </svg>
+    <img class="heromark" data-speed="0.07" src="img/appicon_1024.png" alt="clip and cue logo">
     <h1><span class="word">clip</span> <span class="word">and</span> <span class="word">cue</span></h1>
-    <div class="shead" style="margin:48px auto 0">
-      <div class="kicker">what it is, is what it is</div>
+    <div class="shead" style="margin:78px auto 0">
+      <div class="herodiv" aria-hidden="true"></div>
       <h2>Copy now. Paste later.</h2>
       <p>Your clipboard only holds one thing at a time. Let's fix that.</p>
     </div>
