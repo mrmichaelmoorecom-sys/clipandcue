@@ -1,16 +1,25 @@
 import SwiftUI
 
 /// A keyboard-shortcut number badge (1–9). Turns accent-filled with a pin
-/// glyph when the item is pinned (a favorite).
+/// glyph when the item is pinned. When `numbered` is false, renders as a
+/// blank placeholder box — used in the dropdown menu for items past slot 9
+/// (which the HUD's 1–9 quick-keys can't reach).
 struct NumberBadge: View {
     let number: Int
     var large: Bool = false
     var pinned: Bool = false
+    var numbered: Bool = true
 
     var body: some View {
-        Text("\(number)")
-            .font(.system(size: large ? 15 : 11, weight: .semibold, design: .rounded))
-            .monospacedDigit()
+        Group {
+            if numbered {
+                Text("\(number)")
+                    .font(.system(size: large ? 15 : 11, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+            } else {
+                Color.clear
+            }
+        }
             .frame(width: large ? 26 : 20, height: large ? 26 : 20)
             .background(
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -35,6 +44,9 @@ struct ClipRowView: View {
     let index: Int
     let item: ClipItem
     var large: Bool = false
+    /// Show the numeric label inside the badge. False in the dropdown for items
+    /// past slot 9 (no 1–9 quick-key, so the number would lie).
+    var numbered: Bool = true
     /// When set, the number badge becomes a button that pins/unpins the item.
     var onTogglePin: (() -> Void)? = nil
 
@@ -67,12 +79,12 @@ struct ClipRowView: View {
     private var badge: some View {
         if let onTogglePin {
             Button(action: onTogglePin) {
-                NumberBadge(number: index + 1, large: large, pinned: item.pinned)
+                NumberBadge(number: index + 1, large: large, pinned: item.pinned, numbered: numbered)
             }
             .buttonStyle(.plain)
             .help(item.pinned ? "Unpin" : "Pin to top")
         } else {
-            NumberBadge(number: index + 1, large: large, pinned: item.pinned)
+            NumberBadge(number: index + 1, large: large, pinned: item.pinned, numbered: numbered)
         }
     }
 

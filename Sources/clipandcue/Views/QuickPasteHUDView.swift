@@ -18,20 +18,35 @@ struct QuickPasteHUDView: View {
             if store.items.isEmpty {
                 empty
             } else {
-                VStack(spacing: 3) {
-                    ForEach(Array(store.items.enumerated()), id: \.element.id) { idx, item in
-                        ClipRowView(index: idx, item: item, large: true)
-                            .background(
-                                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                    .fill(idx == model.selection
-                                          ? Color.accentColor.opacity(0.28)
-                                          : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture { onPick(idx) }
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 3) {
+                            ForEach(Array(store.items.enumerated()), id: \.element.id) { idx, item in
+                                ClipRowView(index: idx, item: item, large: true,
+                                            numbered: idx < 9)
+                                    .id(idx)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                            .fill(idx == model.selection
+                                                  ? Color.accentColor.opacity(0.28)
+                                                  : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
+                                    )
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { onPick(idx) }
+                            }
+                        }
+                        .padding(8)
+                    }
+                    // Caps the HUD at exactly 9 large rows visible. Items past
+                    // 9 are reachable via ↑/↓ or scroll (their badges are
+                    // blank — the 1–9 keys can't paste them anyway).
+                    .frame(maxHeight: 545)
+                    .onChange(of: model.selection) { newSel in
+                        withAnimation(.easeOut(duration: 0.12)) {
+                            proxy.scrollTo(newSel, anchor: .center)
+                        }
                     }
                 }
-                .padding(8)
             }
         }
         .frame(width: 420)

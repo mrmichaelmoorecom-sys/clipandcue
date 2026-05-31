@@ -3,7 +3,7 @@ import Combine
 
 /// Ordered, capped history of clipboard items (newest first), persisted to disk.
 final class ClipStore: ObservableObject {
-    static let maxItems = 9
+    static let maxItems = 50
 
     @Published private(set) var items: [ClipItem] = []
 

@@ -5,8 +5,10 @@ import Combine
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    /// Hard ceiling — the 1–9 hotkeys map to at most 9 items.
-    static let maxHistory = 9
+    /// Hard ceiling on how many items the store may hold.
+    /// The HUD's 1–9 quick-paste keys still only address the top 9; anything
+    /// beyond that is reached via search or ↑/↓ + ⏎.
+    static let maxHistory = 50
 
     private enum Keys {
         static let sizeCapMB = "sizeCapMB"
@@ -54,7 +56,7 @@ final class AppSettings: ObservableObject {
         d.register(defaults: [
             Keys.sizeCapMB: 20,
             Keys.autoPaste: true,
-            Keys.historySize: Self.maxHistory,
+            Keys.historySize: 9,
             Keys.pasteAsPlainText: false,
             Keys.ignoreConcealed: false,
             Keys.clearOnQuit: false
