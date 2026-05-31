@@ -73,9 +73,29 @@ final class StatusItemController: NSObject {
 
     private func configureButton() {
         guard let button = statusItem.button else { return }
-        button.image = normalIcon()
         button.action = #selector(togglePopover(_:))
         button.target = self
+        if let base = normalIcon() {
+            let pink = NSColor(srgbRed: 213/255, green: 193/255, blue: 198/255, alpha: 1.0)  // #d5c1c6
+            button.image = tinted(image: base, with: pink)
+        } else {
+            button.image = nil
+        }
+    }
+
+    /// Bake `color` into a copy of `image` (sourceAtop), and mark it
+    /// non-template so macOS doesn't override the color in the menu bar.
+    private func tinted(image src: NSImage, with color: NSColor) -> NSImage {
+        let size = src.size
+        let out = NSImage(size: size)
+        out.lockFocus()
+        src.draw(at: .zero, from: NSRect(origin: .zero, size: size),
+                 operation: .sourceOver, fraction: 1.0)
+        color.set()
+        NSRect(origin: .zero, size: size).fill(using: .sourceAtop)
+        out.unlockFocus()
+        out.isTemplate = false
+        return out
     }
 
     private func configurePopover() {

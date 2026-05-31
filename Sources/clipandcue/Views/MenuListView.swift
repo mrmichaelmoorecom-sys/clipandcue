@@ -58,10 +58,7 @@ struct MenuListView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .frame(width: 16, height: 16)
+        HStack {
             Text("clipandcue")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -113,8 +110,10 @@ struct MenuListView: View {
                         .onTapGesture { onPick(entry.idx) }
                 }
             }
+            // Breathing room between the last row and the footer divider.
+            .padding(.bottom, 8)
         }
-        .frame(maxHeight: 360)
+        .frame(maxHeight: 368)
     }
 
     private var emptyState: some View {
