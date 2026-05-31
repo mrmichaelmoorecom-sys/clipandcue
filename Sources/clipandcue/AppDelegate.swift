@@ -18,9 +18,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
         sc.onPreferences = { [weak self] in self?.openPreferences() }
         sc.onHowTo = { [weak self] in self?.openHowTo() }
-        sc.onNewNote = { [weak self] in
+        sc.onExport = { [weak self] in
             guard let self else { return }
-            NoteExporter.exportToNewNote(self.store.items)
+            Exporter.exportToTextEdit(self.store.items)
         }
         statusController = sc
 

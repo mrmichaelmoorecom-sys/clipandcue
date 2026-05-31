@@ -10,7 +10,7 @@ final class StatusItemController: NSObject {
     var onPick: ((Int) -> Void)?
     var onPreferences: (() -> Void)?
     var onHowTo: (() -> Void)?
-    var onNewNote: (() -> Void)?
+    var onExport: (() -> Void)?
 
     init(store: ClipStore) {
         self.store = store
@@ -85,9 +85,9 @@ final class StatusItemController: NSObject {
             store: store,
             onPick: { [weak self] idx in self?.handlePick(idx) },
             onClear: { [weak self] in self?.store.clear() },
-            onNewNote: { [weak self] in
+            onExport: { [weak self] in
                 self?.closePopover()
-                self?.onNewNote?()
+                self?.onExport?()
             },
             onPreferences: { [weak self] in
                 self?.closePopover()

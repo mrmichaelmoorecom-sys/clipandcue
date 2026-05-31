@@ -59,18 +59,19 @@ To produce a **Developer ID-signed, notarized** release dmg instead, see
   *System Settings → Privacy & Security → Accessibility*. Until then, picking an
   item just places it on the clipboard for you to ⌘V manually.
 - **Notifications** — used only for the "copy too large to save" alert.
-- **Automation → Notes** — only requested when you use **New note**, so clipandcue
-  can hand your history to the Notes app.
 
 ## Using it
 
 - **Click the menu bar icon** → see your recent copies; click one to paste.
-  Footer has **Clear**, **New note**, **How to**, **Preferences**, and **Quit**.
+  Footer has **Clear**, **Export**, **How to**, **Preferences**, and **Quit**.
 - **⌘⌥V** → floating quick-paste panel; press **1–9** to paste, **↑/↓ + ⏎** to
   navigate, **Esc** to dismiss.
-- **New note** → exports the current history into a single Notes note (text rows
-  plus embedded image attachments). Falls back to the clipboard if Notes
-  automation is denied.
+- **Pin a favorite** → click the **number badge** on a row in the menu to pin
+  it. Pinned items jump to the top and stay there as you keep copying. Click the
+  badge again to unpin.
+- **Export** → dumps the whole history into a temp `.rtfd` document and opens
+  it in TextEdit (text rows + inline image attachments). Save / share from
+  there, or ⌘A ⌘C and paste into Notes / Mail.
 
 ## Preferences
 
@@ -99,13 +100,16 @@ To produce a **Developer ID-signed, notarized** release dmg instead, see
 
 By default clipandcue **captures everything**, including clipboard items password
 managers mark as concealed/transient. That means a copied password can land in the
-history and is **stored unencrypted on disk** at:
+history and is **stored unencrypted on disk** in your *user* Library:
 
 ```
 ~/Library/Application Support/clipandcue/
   history.json     # item metadata
   blobs/           # image / rich-text data
 ```
+
+> Finder hides `~/Library` by default. To navigate to the folder, open Finder,
+> press **⌘⇧G** (Go → Go to Folder…), paste the path, and press Return.
 
 To harden this: turn on **Ignore items from password managers** and/or **Clear
 history when I quit** in Preferences, or use **Clear** anytime. The capture path is
@@ -136,7 +140,7 @@ Sources/clipandcue/
   QuickPasteController.swift       borderless HUD panel for 1–9 quick paste
   Notifier.swift                   UNUserNotificationCenter "too large" alert
   LaunchAtLogin.swift              SMAppService register/unregister/status
-  NoteExporter.swift               builds a Notes note (base64 <img> + text)
+  Exporter.swift                   builds an RTFD document and opens it in TextEdit
   Views/
     MenuListView.swift             the dropdown list + footer actions
     ClipRowView.swift              one history row (badge + preview)

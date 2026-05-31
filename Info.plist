@@ -13,9 +13,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.4</string>
+    <string>0.1.5</string>
     <key>CFBundleVersion</key>
-    <string>5</string>
+    <string>6</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
@@ -26,7 +26,5 @@
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
     <string>clipandcue — freeware clipboard history utility.</string>
-    <key>NSAppleEventsUsageDescription</key>
-    <string>clip and cue uses Notes to create a note from your clipboard history when you choose “New note”.</string>
 </dict>
 </plist>

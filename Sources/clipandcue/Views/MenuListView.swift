@@ -5,7 +5,7 @@ struct MenuListView: View {
     @ObservedObject var store: ClipStore
     var onPick: (Int) -> Void
     var onClear: () -> Void
-    var onNewNote: () -> Void
+    var onExport: () -> Void
     var onPreferences: () -> Void
     var onHowTo: () -> Void
     var onQuit: () -> Void
@@ -80,7 +80,7 @@ struct MenuListView: View {
         HStack(spacing: 8) {
             FooterButton(title: "Clear", systemImage: "trash", action: onClear)
                 .disabled(store.items.isEmpty)
-            FooterButton(title: "New note", systemImage: "square.and.pencil", action: onNewNote)
+            FooterButton(title: "Export", systemImage: "square.and.arrow.up", action: onExport)
                 .disabled(store.items.isEmpty)
             Spacer()
             FooterButton(title: "How to", systemImage: "questionmark.circle", action: onHowTo)
