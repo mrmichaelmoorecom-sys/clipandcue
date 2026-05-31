@@ -9,6 +9,11 @@ final class ClipboardMonitor {
     private let pasteboard = NSPasteboard.general
     private var timer: Timer?
     private var lastChangeCount: Int
+    /// When true, the next pasteboard change tick is treated as our own
+    /// (e.g. the user picked an item from the menu and we re-wrote it to the
+    /// pasteboard to synthesize ⌘V). We just bump lastChangeCount and skip
+    /// adding it to history — so pasting a clip doesn't reorder it to the top.
+    private var skipNextChange = false
 
     init(store: ClipStore) {
         self.store = store
@@ -29,10 +34,22 @@ final class ClipboardMonitor {
         timer = nil
     }
 
+    /// Tell the monitor to ignore the very next pasteboard change — used when
+    /// clipandcue itself writes to the pasteboard (e.g. delivering a picked
+    /// clip) so the just-pasted item doesn't get re-added to the top.
+    func suppressNextChange() {
+        skipNextChange = true
+    }
+
     private func poll() {
         let current = pasteboard.changeCount
         guard current != lastChangeCount else { return }
         lastChangeCount = current
+
+        if skipNextChange {
+            skipNextChange = false
+            return
+        }
 
         switch readPasteboard() {
         case .none:

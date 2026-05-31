@@ -50,6 +50,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func paste(index: Int) {
         guard let item = store.item(at: index) else { return }
+        // Don't let our own re-write of the pasteboard reorder the item.
+        monitor.suppressNextChange()
         Paster.shared.deliver(item, autoPaste: settings.autoPaste)
     }
 

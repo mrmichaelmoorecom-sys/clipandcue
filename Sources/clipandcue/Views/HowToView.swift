@@ -66,8 +66,22 @@ struct HowToView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Text("v\(appVersion)")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.secondary.opacity(0.12))
+                )
         }
         .padding(.bottom, 18)
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
 
     @ViewBuilder
