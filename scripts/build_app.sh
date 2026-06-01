@@ -36,6 +36,14 @@ if [[ -f "$APP/Contents/Resources/AppIcon.icns" ]]; then
     /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string AppIcon" "$APP/Contents/Info.plist" 2>/dev/null || true
 fi
 
+# Embed the Developer ID provisioning profile if present — required so the
+# Developer-ID-signed app is authorized to use the iCloud/CloudKit container.
+PROFILE="$ROOT/clipandcue.provisionprofile"
+if [[ -f "$PROFILE" ]]; then
+    echo "==> embedding provisioning profile"
+    cp "$PROFILE" "$APP/Contents/embedded.provisionprofile"
+fi
+
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
     echo "==> codesign (Developer ID, hardened runtime)"
     codesign --force --deep --options runtime --timestamp \
