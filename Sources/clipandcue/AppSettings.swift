@@ -17,6 +17,7 @@ final class AppSettings: ObservableObject {
         static let pasteAsPlainText = "pasteAsPlainText"
         static let ignoreConcealed = "ignoreConcealed"
         static let clearOnQuit = "clearOnQuit"
+        static let syncEnabled = "syncEnabled"
     }
 
     /// Per-item storage cap in megabytes. Items larger than this are not saved.
@@ -51,6 +52,11 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(clearOnQuit, forKey: Keys.clearOnQuit) }
     }
 
+    /// Sync text/image clips to the user's other devices via CloudKit.
+    @Published var syncEnabled: Bool {
+        didSet { UserDefaults.standard.set(syncEnabled, forKey: Keys.syncEnabled) }
+    }
+
     private init() {
         let d = UserDefaults.standard
         d.register(defaults: [
@@ -59,7 +65,8 @@ final class AppSettings: ObservableObject {
             Keys.historySize: 9,
             Keys.pasteAsPlainText: false,
             Keys.ignoreConcealed: false,
-            Keys.clearOnQuit: false
+            Keys.clearOnQuit: false,
+            Keys.syncEnabled: true
         ])
         sizeCapMB = d.integer(forKey: Keys.sizeCapMB)
         autoPaste = d.bool(forKey: Keys.autoPaste)
@@ -67,6 +74,7 @@ final class AppSettings: ObservableObject {
         pasteAsPlainText = d.bool(forKey: Keys.pasteAsPlainText)
         ignoreConcealed = d.bool(forKey: Keys.ignoreConcealed)
         clearOnQuit = d.bool(forKey: Keys.clearOnQuit)
+        syncEnabled = d.bool(forKey: Keys.syncEnabled)
     }
 
     var sizeCapBytes: Int { sizeCapMB * 1024 * 1024 }

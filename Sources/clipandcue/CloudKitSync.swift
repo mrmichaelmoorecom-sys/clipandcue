@@ -25,16 +25,19 @@ final class MacCloudKitSync {
         FileManager.default.ubiquityIdentityToken != nil
     }
 
+    /// User preference (Preferences → "Sync with my other devices").
+    private var syncEnabled: Bool { AppSettings.shared.syncEnabled }
+
     /// Push one captured clip so it reaches the iPhone promptly.
     func push(_ item: ClipItem) {
-        guard iCloudAvailable, let record = Self.record(from: item) else { return }
+        guard syncEnabled, iCloudAvailable, let record = Self.record(from: item) else { return }
         Task { _ = try? await database.modifyRecords(saving: [record], deleting: []) }
     }
 
     /// Pull recent remote clips and merge genuinely-new ones into the store.
     @MainActor
     func pull(into store: ClipStore) async {
-        guard iCloudAvailable else { return }
+        guard syncEnabled, iCloudAvailable else { return }
         let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
         query.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
         guard let matches = try? await database.records(

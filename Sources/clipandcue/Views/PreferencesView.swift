@@ -30,6 +30,12 @@ struct PreferencesView: View {
                 }
             }
 
+            Section("Sync") {
+                Toggle("Sync with my other devices", isOn: $settings.syncEnabled)
+                Text("Syncs clips through your iCloud account to your other devices running clip and cue (e.g. your iPhone). Off keeps everything on this Mac.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             Section("Pasting") {
                 Toggle("Paste into the active app automatically", isOn: $settings.autoPaste)
                 Toggle("Paste as plain text", isOn: $settings.pasteAsPlainText)
