@@ -34,6 +34,29 @@ final class MacCloudKitSync {
         Task { _ = try? await database.modifyRecords(saving: [record], deleting: []) }
     }
 
+    /// Delete every Clip record from the private database. Used by "Clear" so
+    /// a cleared clip (e.g. a copied password) doesn't linger in the cloud or
+    /// get re-pulled. Runs even when sync is off, to purge previously-synced data.
+    func deleteAll() async {
+        guard iCloudAvailable else { return }
+        let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
+        do {
+            let first = try await database.records(matching: query, desiredKeys: [])
+            var ids = first.matchResults.map(\.0)
+            var cursor = first.queryCursor
+            while let next = cursor {
+                let page = try await database.records(continuingMatchFrom: next, desiredKeys: [])
+                ids.append(contentsOf: page.matchResults.map(\.0))
+                cursor = page.queryCursor
+            }
+            if !ids.isEmpty {
+                _ = try await database.modifyRecords(saving: [], deleting: ids)
+            }
+        } catch {
+            // best-effort
+        }
+    }
+
     /// Pull recent remote clips and merge genuinely-new ones into the store.
     @MainActor
     func pull(into store: ClipStore) async {

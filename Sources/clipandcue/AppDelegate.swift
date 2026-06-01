@@ -47,6 +47,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         m.start()
         monitor = m
 
+        // When the user clears history, also delete the clips from CloudKit so
+        // nothing sensitive lingers in the cloud or re-syncs back.
+        store.onClear = { [weak self] in
+            Task { await self?.cloud.deleteAll() }
+        }
+
         // Pull any clips the iPhone (or another device) saved while we were away.
         Task { await cloud.pull(into: store) }
     }

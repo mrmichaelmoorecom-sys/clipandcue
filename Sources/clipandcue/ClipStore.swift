@@ -7,6 +7,10 @@ final class ClipStore: ObservableObject {
 
     @Published private(set) var items: [ClipItem] = []
 
+    /// Fired when the history is cleared/purged, so the app can also delete the
+    /// clips from CloudKit (otherwise cleared clips linger in the cloud).
+    var onClear: (() -> Void)?
+
     private let supportDir: URL
     private let blobsDir: URL
     private let historyURL: URL
@@ -74,6 +78,7 @@ final class ClipStore: ObservableObject {
     func clear() {
         items.removeAll()
         scheduleSave()
+        onClear?()
     }
 
     /// Synchronously wipe in-memory items and on-disk data (used on quit).
@@ -82,6 +87,7 @@ final class ClipStore: ObservableObject {
         saveWorkItem?.cancel()
         try? FileManager.default.removeItem(at: historyURL)
         try? FileManager.default.removeItem(at: blobsDir)
+        onClear?()
     }
 
     func item(at index: Int) -> ClipItem? {
