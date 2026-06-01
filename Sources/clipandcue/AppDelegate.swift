@@ -39,13 +39,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.statusController.flashWarning()
             Notifier.shared.notifyOversized(bytes: bytes, kindLabel: label)
         }
-        // Push each freshly captured text clip up to CloudKit so it reaches the iPhone.
+        // Push each freshly captured clip (text or image) up to CloudKit so it
+        // reaches the iPhone. MacCloudKitSync filters out unsyncable kinds.
         m.onCaptured = { [weak self] item in
-            guard let self,
-                  item.kind == .text || item.kind == .richText,
-                  let text = item.text,
-                  !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-            self.cloud.push(id: item.id, text: text, createdAt: item.createdAt)
+            self?.cloud.push(item)
         }
         m.start()
         monitor = m

@@ -1,17 +1,16 @@
 import Foundation
+import AppKit
 import CloudKit
 
-/// Mirrors the iOS app's CloudKit schema so text clips sync between this Mac
-/// and the user's iPhone through their **private** CloudKit database.
+/// Mirrors the iOS app's CloudKit schema so clips sync between this Mac and the
+/// user's iPhone through their **private** CloudKit database.
 ///
-/// Text-only by design: images, files, and rich text don't map to the iOS
-/// text keyboard, so only the plain-text payload crosses the wire (rich text
-/// sends its text fallback). One record per clip, keyed by the clip's UUID,
-/// matching `iCloud.com.clipandcue.shared` / record type `Clip` on iOS.
+/// Syncs text and image clips (rich text travels as its plain-text fallback;
+/// file clips aren't synced). One record per clip, keyed by UUID, matching
+/// `iCloud.com.clipandcue.shared` / record type `Clip`: fields `kind` (String),
+/// `createdAt` (Date), `text` (String) for text, `image` (CKAsset) for images.
 ///
-/// All operations are gated on an available iCloud account and are
-/// best-effort: failures are swallowed, and the next launch's `pull` plus
-/// per-capture `push` reconcile anything that didn't land.
+/// Gated on an available iCloud account; all operations are best-effort.
 final class MacCloudKitSync {
     static let containerID = "iCloud.com.clipandcue.shared"
     static let recordType = "Clip"
@@ -22,27 +21,17 @@ final class MacCloudKitSync {
         database = CKContainer(identifier: Self.containerID).privateCloudDatabase
     }
 
-    /// Cheap proxy for "iCloud is usable on this Mac" — avoids touching
-    /// CloudKit when the user isn't signed in.
     private var iCloudAvailable: Bool {
         FileManager.default.ubiquityIdentityToken != nil
     }
 
-    /// Push one captured text clip so it reaches the iPhone promptly.
-    func push(id: UUID, text: String, createdAt: Date) {
-        guard iCloudAvailable else { return }
-        Task {
-            let recordID = CKRecord.ID(recordName: id.uuidString)
-            let record = CKRecord(recordType: Self.recordType, recordID: recordID)
-            record["text"] = text as CKRecordValue
-            record["createdAt"] = createdAt as CKRecordValue
-            _ = try? await database.modifyRecords(saving: [record], deleting: [])
-        }
+    /// Push one captured clip so it reaches the iPhone promptly.
+    func push(_ item: ClipItem) {
+        guard iCloudAvailable, let record = Self.record(from: item) else { return }
+        Task { _ = try? await database.modifyRecords(saving: [record], deleting: []) }
     }
 
     /// Pull recent remote clips and merge genuinely-new ones into the store.
-    /// Skips clips whose content the store already has, so an existing item is
-    /// never reordered to the top by a routine sync.
     @MainActor
     func pull(into store: ClipStore) async {
         guard iCloudAvailable else { return }
@@ -53,12 +42,61 @@ final class MacCloudKitSync {
 
         for (_, result) in matches {
             guard case .success(let record) = result,
-                  let text = record["text"] as? String,
-                  let createdAt = record["createdAt"] as? Date,
-                  let id = UUID(uuidString: record.recordID.recordName) else { continue }
-            let candidate = ClipItem(kind: .text, id: id, createdAt: createdAt, text: text)
+                  let candidate = Self.clipItem(from: record) else { continue }
             if store.items.contains(where: { $0.sameContent(as: candidate) }) { continue }
             store.add(candidate)
         }
+    }
+
+    // MARK: Record <-> ClipItem
+
+    private static func record(from item: ClipItem) -> CKRecord? {
+        let recordID = CKRecord.ID(recordName: item.id.uuidString)
+        let record = CKRecord(recordType: recordType, recordID: recordID)
+        record["createdAt"] = item.createdAt as CKRecordValue
+
+        switch item.kind {
+        case .text, .richText:
+            guard let text = item.text,
+                  !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+            record["kind"] = "text" as CKRecordValue
+            record["text"] = text as CKRecordValue
+        case .image:
+            guard let data = item.imageData else { return nil }
+            let tmp = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(item.id.uuidString).img")
+            guard (try? data.write(to: tmp, options: .atomic)) != nil else { return nil }
+            record["kind"] = "image" as CKRecordValue
+            record["image"] = CKAsset(fileURL: tmp)
+        case .files:
+            return nil  // not synced to the text-and-image iOS app
+        }
+        return record
+    }
+
+    private static func clipItem(from record: CKRecord) -> ClipItem? {
+        guard let id = UUID(uuidString: record.recordID.recordName),
+              let createdAt = record["createdAt"] as? Date else { return nil }
+        let kind = record["kind"] as? String ?? "text"
+
+        if kind == "image",
+           let asset = record["image"] as? CKAsset,
+           let url = asset.fileURL,
+           let data = try? Data(contentsOf: url) {
+            let image = NSImage(data: data)
+            let size = image.flatMap(ImageUtils.pixelSize)
+            return ClipItem(
+                kind: .image,
+                id: id,
+                createdAt: createdAt,
+                imageData: data,
+                imageUTType: "public.png",
+                thumbnailData: image.flatMap { ImageUtils.thumbnailPNG(from: $0, maxDimension: 96) },
+                pixelWidth: size?.width,
+                pixelHeight: size?.height)
+        }
+
+        guard let text = record["text"] as? String else { return nil }
+        return ClipItem(kind: .text, id: id, createdAt: createdAt, text: text)
     }
 }
