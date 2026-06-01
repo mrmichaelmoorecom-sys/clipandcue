@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = ClipStore()
     private let settings = AppSettings.shared
     private var monitor: ClipboardMonitor!
+    private let cloud = MacCloudKitSync()
     private var statusController: StatusItemController!
     private var quickPaste: QuickPasteController!
     private var hotkey: GlobalHotkey!
@@ -38,8 +39,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.statusController.flashWarning()
             Notifier.shared.notifyOversized(bytes: bytes, kindLabel: label)
         }
+        // Push each freshly captured text clip up to CloudKit so it reaches the iPhone.
+        m.onCaptured = { [weak self] item in
+            guard let self,
+                  item.kind == .text || item.kind == .richText,
+                  let text = item.text,
+                  !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            self.cloud.push(id: item.id, text: text, createdAt: item.createdAt)
+        }
         m.start()
         monitor = m
+
+        // Pull any clips the iPhone (or another device) saved while we were away.
+        Task { await cloud.pull(into: store) }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

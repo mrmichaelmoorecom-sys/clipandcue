@@ -5,6 +5,10 @@ final class ClipboardMonitor {
     /// Fired when a copy was skipped because it exceeded the size cap.
     var onOversized: ((_ bytes: Int, _ kindLabel: String) -> Void)?
 
+    /// Fired for each freshly captured clip (not for clips ingested from
+    /// elsewhere), so the app can push it to CloudKit without a sync feedback loop.
+    var onCaptured: ((ClipItem) -> Void)?
+
     private let store: ClipStore
     private let pasteboard = NSPasteboard.general
     private var timer: Timer?
@@ -56,6 +60,7 @@ final class ClipboardMonitor {
             break
         case .item(let item):
             store.add(item)
+            onCaptured?(item)
         case .oversize(let bytes, let label):
             onOversized?(bytes, label)
         }

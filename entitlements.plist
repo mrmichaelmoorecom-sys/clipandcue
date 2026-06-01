@@ -5,5 +5,14 @@
     <!-- Allow sending Apple events (Notes "New note") under the hardened runtime. -->
     <key>com.apple.security.automation.apple-events</key>
     <true/>
+    <!-- CloudKit sync with the iPhone app (shared private-database container). -->
+    <key>com.apple.developer.icloud-container-identifiers</key>
+    <array>
+        <string>iCloud.com.clipandcue.shared</string>
+    </array>
+    <key>com.apple.developer.icloud-services</key>
+    <array>
+        <string>CloudKit</string>
+    </array>
 </dict>
 </plist>
