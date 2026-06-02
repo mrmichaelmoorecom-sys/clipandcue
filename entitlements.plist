@@ -14,8 +14,12 @@
     <array>
         <string>CloudKit</string>
     </array>
-    <!-- Receive silent CloudKit pushes for live sync (Developer ID → production APNs). -->
-    <key>aps-environment</key>
+    <!-- Receive silent CloudKit pushes for live sync (Developer ID → production APNs).
+         NOTE: macOS uses the com.apple.developer-prefixed key; the bare
+         `aps-environment` key is iOS-only and, on macOS, is treated as an
+         unauthorized restricted entitlement → "Launchd job spawn failed" at
+         launch. Must match the key the provisioning profile authorizes. -->
+    <key>com.apple.developer.aps-environment</key>
     <string>production</string>
 </dict>
 </plist>
