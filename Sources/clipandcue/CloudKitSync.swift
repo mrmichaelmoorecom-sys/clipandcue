@@ -34,6 +34,22 @@ final class MacCloudKitSync {
         Task { _ = try? await database.modifyRecords(saving: [record], deleting: []) }
     }
 
+    /// Register a silent-push subscription so this Mac is woken to fetch when a
+    /// clip changes on another device. Records are in the default zone, so a
+    /// `CKQuerySubscription` is used. Idempotent (re-save errors are ignored).
+    func ensureSubscription() async {
+        guard syncEnabled, iCloudAvailable else { return }
+        let subscription = CKQuerySubscription(
+            recordType: Self.recordType,
+            predicate: NSPredicate(value: true),
+            subscriptionID: "clip-changes",
+            options: [.firesOnRecordCreation, .firesOnRecordUpdate, .firesOnRecordDeletion])
+        let info = CKSubscription.NotificationInfo()
+        info.shouldSendContentAvailable = true   // silent push
+        subscription.notificationInfo = info
+        _ = try? await database.save(subscription)
+    }
+
     /// Delete every Clip record from the private database. Used by "Clear" so
     /// a cleared clip (e.g. a copied password) doesn't linger in the cloud or
     /// get re-pulled. Runs even when sync is off, to purge previously-synced data.

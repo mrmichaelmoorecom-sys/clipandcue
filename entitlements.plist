@@ -14,5 +14,8 @@
     <array>
         <string>CloudKit</string>
     </array>
+    <!-- Receive silent CloudKit pushes for live sync (Developer ID → production APNs). -->
+    <key>aps-environment</key>
+    <string>production</string>
 </dict>
 </plist>

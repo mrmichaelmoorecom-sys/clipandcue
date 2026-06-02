@@ -53,7 +53,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { await self?.cloud.deleteAll() }
         }
 
-        // Pull any clips the iPhone (or another device) saved while we were away.
+        // Pull any clips the iPhone (or another device) saved while we were away,
+        // and register for live updates: a silent CloudKit push wakes us to pull
+        // when a clip changes on another device.
+        NSApplication.shared.registerForRemoteNotifications()
+        Task {
+            await cloud.ensureSubscription()
+            await cloud.pull(into: store)
+        }
+    }
+
+    /// Silent CloudKit push → fetch the latest clips (live cross-device sync).
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        Task { await cloud.pull(into: store) }
+    }
+
+    /// Fallback for when a push is missed: refresh whenever the app is focused.
+    func applicationDidBecomeActive(_ notification: Notification) {
         Task { await cloud.pull(into: store) }
     }
 
