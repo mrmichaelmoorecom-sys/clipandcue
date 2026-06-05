@@ -1,4 +1,33 @@
+# clip and cue — all crawlers welcome, including AI assistants.
 User-agent: *
+Allow: /
+
+# Explicitly opt in to AI / LLM crawlers so the app can be cited and answered about.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://clipandcue.com/sitemap.xml

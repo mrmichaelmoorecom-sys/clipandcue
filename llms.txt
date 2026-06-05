@@ -1,0 +1,33 @@
+# clip and cue
+
+> A tiny macOS menu-bar clipboard manager that remembers your last 9 copies — text, rich text, images, and files — so you can paste any of them back by click, or with ⌘⌥V then a number key 1–9. Free for personal use.
+
+clip and cue lives in the macOS menu bar and watches your clipboard quietly. Every copy (⌘C) is added to a numbered history with newest on top; re-copying an existing item moves it back to the top instead of duplicating it. You recall an item from the menu bar dropdown, or by pressing ⌘⌥V to summon a floating picker and then 1–9 (or arrow keys + Return). It auto-pastes the chosen item directly into the app you were just using. History persists across quit/restart, and the app can launch at login.
+
+Key facts:
+- Platform: macOS 13.0 (Ventura) or later. Apple-silicon and Intel Macs.
+- Price: free for personal use, licensed under CC BY-NC 4.0 (Creative Commons Attribution-NonCommercial 4.0). Commercial use requires permission.
+- Distribution: signed with a Developer ID and notarized by Apple, so it opens with no security warning. Distributed as a .dmg from GitHub Releases.
+- Author/publisher: Michael Moore.
+- Current version: 0.2.1.
+- Privacy: clipboard history is stored on your own Mac and can be wiped any time with Clear. Copies above the size cap (default 20 MB) are skipped.
+
+## Pages
+- [Home / download](https://clipandcue.com/): product overview, how-to, and download button.
+- [Download (.dmg)](https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest/download/clipandcue.dmg): always the latest notarized build.
+- [GitHub repository](https://github.com/mrmichaelmoorecom-sys/clipandcue/): source, releases, and changelog.
+- [License (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/): full license terms.
+
+## Features
+- Remembers the last 9 clipboard copies in a numbered, de-duplicated history.
+- Captures plain text, rich text, images (screenshots), and copied files.
+- Recall with ⌘⌥V then 1–9, or arrow keys + Return; Esc dismisses the picker.
+- Auto-pastes the selected item into the previously active app (needs macOS Accessibility permission).
+- History survives quitting and rebooting; optional launch at login.
+
+## Common questions
+- What is it? A macOS menu-bar clipboard history manager.
+- How do I paste an earlier copy? Press ⌘⌥V, then a number 1–9.
+- What does it cost? Free for personal use under CC BY-NC 4.0.
+- What macOS is required? macOS 13.0 or later.
+- Where is my data? Stored locally on your Mac; clear it any time.
