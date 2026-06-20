@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Carbon.HIToolbox
 
 /// User-tunable preferences backed by UserDefaults.
 final class AppSettings: ObservableObject {
@@ -18,7 +19,13 @@ final class AppSettings: ObservableObject {
         static let ignoreConcealed = "ignoreConcealed"
         static let clearOnQuit = "clearOnQuit"
         static let syncEnabled = "syncEnabled"
+        static let hotkeyKeyCode = "hotkeyKeyCode"
+        static let hotkeyModifiers = "hotkeyModifiers"
     }
+
+    /// The factory default — ⌘⌥V.
+    static let defaultHotkeyKeyCode = kVK_ANSI_V
+    static let defaultHotkeyModifiers = Int(cmdKey | optionKey)
 
     /// Per-item storage cap in megabytes. Items larger than this are not saved.
     @Published var sizeCapMB: Int {
@@ -57,6 +64,16 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(syncEnabled, forKey: Keys.syncEnabled) }
     }
 
+    /// Quick-paste hotkey — the virtual key code (Carbon kVK_*).
+    @Published var hotkeyKeyCode: Int {
+        didSet { UserDefaults.standard.set(hotkeyKeyCode, forKey: Keys.hotkeyKeyCode) }
+    }
+
+    /// Quick-paste hotkey — the modifier mask (Carbon cmdKey | optionKey | …).
+    @Published var hotkeyModifiers: Int {
+        didSet { UserDefaults.standard.set(hotkeyModifiers, forKey: Keys.hotkeyModifiers) }
+    }
+
     private init() {
         let d = UserDefaults.standard
         d.register(defaults: [
@@ -66,7 +83,9 @@ final class AppSettings: ObservableObject {
             Keys.pasteAsPlainText: false,
             Keys.ignoreConcealed: false,
             Keys.clearOnQuit: false,
-            Keys.syncEnabled: true
+            Keys.syncEnabled: true,
+            Keys.hotkeyKeyCode: Self.defaultHotkeyKeyCode,
+            Keys.hotkeyModifiers: Self.defaultHotkeyModifiers
         ])
         sizeCapMB = d.integer(forKey: Keys.sizeCapMB)
         autoPaste = d.bool(forKey: Keys.autoPaste)
@@ -75,6 +94,8 @@ final class AppSettings: ObservableObject {
         ignoreConcealed = d.bool(forKey: Keys.ignoreConcealed)
         clearOnQuit = d.bool(forKey: Keys.clearOnQuit)
         syncEnabled = d.bool(forKey: Keys.syncEnabled)
+        hotkeyKeyCode = d.integer(forKey: Keys.hotkeyKeyCode)
+        hotkeyModifiers = d.integer(forKey: Keys.hotkeyModifiers)
     }
 
     var sizeCapBytes: Int { sizeCapMB * 1024 * 1024 }

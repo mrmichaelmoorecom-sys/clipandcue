@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Carbon.HIToolbox
 
 struct PreferencesView: View {
     @ObservedObject var settings = AppSettings.shared
@@ -26,7 +27,7 @@ struct PreferencesView: View {
                         value: $settings.historySize, in: 1...AppSettings.maxHistory)
                     .onChange(of: settings.historySize) { _ in store.enforceLimit() }
                 LabeledContent("Quick-paste shortcut") {
-                    Text("⌘⌥V").foregroundStyle(.secondary)
+                    HotkeyRecorderView()
                 }
             }
 
@@ -101,5 +102,92 @@ struct PreferencesView: View {
         if let url = URL(string: urlString) {
             NSWorkspace.shared.open(url)
         }
+    }
+}
+
+/// Click-to-record button that captures the next modified key press and
+/// writes it to AppSettings. Escape cancels, "Reset" restores ⌘⌥V.
+private struct HotkeyRecorderView: View {
+    @ObservedObject private var settings = AppSettings.shared
+    @State private var isRecording = false
+    @State private var monitor: Any?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: toggle) {
+                Text(isRecording ? "Type a shortcut…" : currentDisplay)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .frame(minWidth: 76)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(isRecording ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.12))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .stroke(isRecording ? Color.accentColor : Color.clear, lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+            .help(isRecording ? "Press a key combo (Esc to cancel)" : "Click and press a key combo to change")
+
+            if !isDefault {
+                Button("Reset") { resetToDefault() }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+            }
+        }
+        .onDisappear { stopRecording() }
+    }
+
+    private var currentDisplay: String {
+        HotkeyFormatter.display(keyCode: settings.hotkeyKeyCode,
+                                modifiers: settings.hotkeyModifiers)
+    }
+
+    private var isDefault: Bool {
+        settings.hotkeyKeyCode == AppSettings.defaultHotkeyKeyCode &&
+        settings.hotkeyModifiers == AppSettings.defaultHotkeyModifiers
+    }
+
+    private func toggle() {
+        if isRecording { stopRecording() } else { startRecording() }
+    }
+
+    private func startRecording() {
+        isRecording = true
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            handle(event)
+        }
+    }
+
+    private func stopRecording() {
+        isRecording = false
+        if let m = monitor {
+            NSEvent.removeMonitor(m)
+            monitor = nil
+        }
+    }
+
+    /// Returns nil to consume the event (so it doesn't reach the rest of the UI),
+    /// or the event to let it through (e.g. if it's a bare key with no modifiers).
+    private func handle(_ event: NSEvent) -> NSEvent? {
+        if event.keyCode == kVK_Escape {
+            stopRecording()
+            return nil
+        }
+        let mods = event.modifierFlags.intersection([.command, .option, .control, .shift])
+        // Require at least one modifier — otherwise we'd capture plain typing.
+        guard !mods.isEmpty else { return event }
+        settings.hotkeyKeyCode = Int(event.keyCode)
+        settings.hotkeyModifiers = HotkeyFormatter.carbonModifiers(from: mods)
+        stopRecording()
+        return nil
+    }
+
+    private func resetToDefault() {
+        settings.hotkeyKeyCode = AppSettings.defaultHotkeyKeyCode
+        settings.hotkeyModifiers = AppSettings.defaultHotkeyModifiers
     }
 }

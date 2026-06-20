@@ -3,6 +3,7 @@ import SwiftUI
 /// The dropdown shown from the menu bar status item.
 struct MenuListView: View {
     @ObservedObject var store: ClipStore
+    @ObservedObject private var settings = AppSettings.shared
     var onPick: (Int) -> Void
     var onClear: () -> Void
     var onExport: () -> Void
@@ -63,7 +64,8 @@ struct MenuListView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
             Spacer()
-            Text("⌘⌥V")
+            Text(HotkeyFormatter.display(keyCode: settings.hotkeyKeyCode,
+                                         modifiers: settings.hotkeyModifiers))
                 .font(.system(size: 11, design: .rounded))
                 .foregroundStyle(.tertiary)
         }

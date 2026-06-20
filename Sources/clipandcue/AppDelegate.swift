@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -11,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkey: GlobalHotkey!
     private var prefsWindow: NSWindow?
     private var howToWindow: NSWindow?
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Notifier.shared.requestAuthorization()
@@ -31,8 +33,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let hk = GlobalHotkey()
         hk.onTrigger = { [weak self] in self?.quickPaste.toggle() }
-        hk.register()
+        hk.register(keyCode: UInt32(settings.hotkeyKeyCode),
+                    modifiers: UInt32(settings.hotkeyModifiers))
         hotkey = hk
+
+        // Re-register whenever the user picks a new shortcut in Preferences.
+        // dropFirst skips the immediate emission on subscribe — we already
+        // registered with the loaded values above.
+        settings.$hotkeyKeyCode
+            .combineLatest(settings.$hotkeyModifiers)
+            .dropFirst()
+            .sink { [weak self] keyCode, mods in
+                self?.hotkey.register(keyCode: UInt32(keyCode),
+                                      modifiers: UInt32(mods))
+            }
+            .store(in: &cancellables)
 
         let m = ClipboardMonitor(store: store)
         m.onOversized = { [weak self] bytes, label in
