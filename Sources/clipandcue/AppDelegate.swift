@@ -1,8 +1,9 @@
 import AppKit
 import Combine
 import SwiftUI
+import UserNotifications
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     let store = ClipStore()
     private let settings = AppSettings.shared
     private var monitor: ClipboardMonitor!
@@ -15,6 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Routes notification button taps (e.g. the "Open Preferences"
+        // action on the oversized-copy alert) back into the app.
+        UNUserNotificationCenter.current().delegate = self
         Notifier.shared.requestAuthorization()
 
         let sc = StatusItemController(store: store)
@@ -90,6 +94,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Silent CloudKit push → fetch the latest clips (live cross-device sync).
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
         Task { await cloud.pull(into: store) }
+    }
+
+    /// One-tap "Open Preferences" action on the oversized-copy notification.
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        if response.actionIdentifier == Notifier.openPreferencesAction {
+            openPreferences()
+        }
+        completionHandler()
     }
 
     /// Fallback for when a push is missed: refresh whenever the app is focused.

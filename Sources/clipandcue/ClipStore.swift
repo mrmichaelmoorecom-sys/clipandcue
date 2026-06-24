@@ -45,6 +45,16 @@ final class ClipStore: ObservableObject {
         scheduleSave()
     }
 
+    /// Set or clear a user-assigned label for `id`. Pass nil/empty to revert
+    /// to the computed default (e.g. "IMG_3924.png +5 more"). Position in
+    /// the list is untouched.
+    func setLabel(id: UUID, label: String?) {
+        guard let idx = items.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = label?.trimmingCharacters(in: .whitespacesAndNewlines)
+        items[idx].customLabel = (trimmed?.isEmpty == false) ? trimmed : nil
+        scheduleSave()
+    }
+
     /// Pin/unpin an item. Pinning jumps it to the very top; unpinning drops it
     /// to the top of the unpinned section. Pinned items survive eviction.
     func togglePin(id: UUID) {
@@ -110,6 +120,13 @@ final class ClipStore: ObservableObject {
         let hasThumbnail: Bool
         let hasRTF: Bool
         let pinned: Bool?   // optional for backward-compat with pre-pin history.json
+        /// True when a `<id>.snap` blob (binary plist of the full
+        /// pasteboard type→data dict) exists alongside the other blobs.
+        /// Absent in pre-v0.2.6 history.json files.
+        let hasSnapshot: Bool?
+        /// User-assigned label (right-click → Rename). Optional for
+        /// backward-compat with older history.json files.
+        let customLabel: String?
     }
 
     private func scheduleSave() {
@@ -131,7 +148,13 @@ final class ClipStore: ObservableObject {
         var dtos: [PersistedItem] = []
 
         for item in items {
-            if let data = item.imageData {
+            let hasSnapshot = (item.pasteboardSnapshot?.isEmpty == false)
+
+            // The full image/RTF reps are duplicated inside the snapshot when
+            // it exists, so only write the standalone .full / .rtf blobs for
+            // legacy / cloud-pulled clips (no snapshot). Halves disk usage
+            // for design copies that otherwise stored the same TIFF twice.
+            if !hasSnapshot, let data = item.imageData {
                 let url = blobURL(item.id, "full")
                 try? data.write(to: url, options: .atomic)
                 keep.insert(url.lastPathComponent)
@@ -141,9 +164,16 @@ final class ClipStore: ObservableObject {
                 try? data.write(to: url, options: .atomic)
                 keep.insert(url.lastPathComponent)
             }
-            if let data = item.rtfData {
+            if !hasSnapshot, let data = item.rtfData {
                 let url = blobURL(item.id, "rtf")
                 try? data.write(to: url, options: .atomic)
+                keep.insert(url.lastPathComponent)
+            }
+            if let snap = item.pasteboardSnapshot, !snap.isEmpty,
+               let snapData = try? PropertyListSerialization.data(
+                    fromPropertyList: snap, format: .binary, options: 0) {
+                let url = blobURL(item.id, "snap")
+                try? snapData.write(to: url, options: .atomic)
                 keep.insert(url.lastPathComponent)
             }
             dtos.append(PersistedItem(
@@ -158,7 +188,9 @@ final class ClipStore: ObservableObject {
                 hasImageData: item.imageData != nil,
                 hasThumbnail: item.thumbnailData != nil,
                 hasRTF: item.rtfData != nil,
-                pinned: item.pinned))
+                pinned: item.pinned,
+                hasSnapshot: hasSnapshot ? true : nil,
+                customLabel: item.customLabel))
         }
 
         // Drop orphaned blob files.
@@ -179,19 +211,60 @@ final class ClipStore: ObservableObject {
             return
         }
         items = dtos.map { dto in
-            ClipItem(
+            // Snapshot is the source of truth when present — image and RTF
+            // bytes live inside it, not in standalone .full / .rtf blobs.
+            // (Clips written by older versions still use the standalone
+            // blobs; we read both paths to handle the upgrade case.)
+            let snapshot: [String: Data]?
+            let imageData: Data?
+            let rtfData: Data?
+            if dto.hasSnapshot == true,
+               let snap = Self.loadSnapshot(id: dto.id, blobsDir: blobsDir) {
+                snapshot = snap
+                imageData = Self.imageDataFromSnapshot(snap, utType: dto.imageUTType)
+                rtfData = snap["public.rtf"]
+            } else {
+                snapshot = nil
+                imageData = dto.hasImageData ? (try? Data(contentsOf: blobURL(dto.id, "full"))) : nil
+                rtfData = dto.hasRTF ? (try? Data(contentsOf: blobURL(dto.id, "rtf"))) : nil
+            }
+            return ClipItem(
                 kind: dto.kind,
                 id: dto.id,
                 createdAt: dto.createdAt,
                 text: dto.text,
-                rtfData: dto.hasRTF ? (try? Data(contentsOf: blobURL(dto.id, "rtf"))) : nil,
-                imageData: dto.hasImageData ? (try? Data(contentsOf: blobURL(dto.id, "full"))) : nil,
+                rtfData: rtfData,
+                imageData: imageData,
                 imageUTType: dto.imageUTType,
                 thumbnailData: dto.hasThumbnail ? (try? Data(contentsOf: blobURL(dto.id, "thumb"))) : nil,
                 pixelWidth: dto.pixelWidth,
                 pixelHeight: dto.pixelHeight,
                 filePaths: dto.filePaths,
-                pinned: dto.pinned ?? false)
+                pasteboardSnapshot: snapshot,
+                pinned: dto.pinned ?? false,
+                customLabel: dto.customLabel)
         }
+    }
+
+    /// Pull whatever image rep matches the dto's `imageUTType` from the
+    /// snapshot dict — keeps CloudKit sync working (which reads `imageData`)
+    /// without storing a duplicate `.full` blob on disk.
+    private static func imageDataFromSnapshot(_ snap: [String: Data],
+                                              utType: String?) -> Data? {
+        if let ut = utType, let d = snap[ut] { return d }
+        // Fall back to the priority order ClipboardMonitor used at capture.
+        return snap["com.adobe.pdf"]
+            ?? snap["public.png"]
+            ?? snap["public.tiff"]
+            ?? snap["public.jpeg"]
+    }
+
+    private static func loadSnapshot(id: UUID, blobsDir: URL) -> [String: Data]? {
+        let url = blobsDir.appendingPathComponent("\(id.uuidString).snap")
+        guard let data = try? Data(contentsOf: url),
+              let plist = try? PropertyListSerialization.propertyList(
+                from: data, options: [], format: nil),
+              let dict = plist as? [String: Data] else { return nil }
+        return dict
     }
 }

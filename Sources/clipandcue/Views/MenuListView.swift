@@ -7,6 +7,10 @@ struct MenuListView: View {
     var onPick: (Int) -> Void
     /// Paste just one file out of a multi-file clip — `(itemIdx, fileIdx)`.
     var onPickFile: (Int, Int) -> Void
+    /// Right-click → Rename on a multi-file row. Sends (itemID, currentLabel)
+    /// up to the StatusItemController which dismisses the popover and shows
+    /// an NSAlert with a text field.
+    var onRename: (UUID, String?) -> Void
     var onClear: () -> Void
     var onExport: () -> Void
     var onPreferences: () -> Void
@@ -119,6 +123,18 @@ struct MenuListView: View {
                                         : (entry.item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
                             .onHover { inside in
                                 hoverIndex = inside ? entry.idx : (hoverIndex == entry.idx ? nil : hoverIndex)
+                            }
+                            .contextMenu {
+                                if multi {
+                                    Button(entry.item.customLabel == nil ? "Rename…" : "Edit name…") {
+                                        onRename(entry.item.id, entry.item.customLabel)
+                                    }
+                                    if entry.item.customLabel != nil {
+                                        Button("Clear custom name") {
+                                            onRename(entry.item.id, nil)
+                                        }
+                                    }
+                                }
                             }
 
                         if multi && expanded, let paths = entry.item.filePaths {

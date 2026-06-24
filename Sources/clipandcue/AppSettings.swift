@@ -77,7 +77,11 @@ final class AppSettings: ObservableObject {
     private init() {
         let d = UserDefaults.standard
         d.register(defaults: [
-            Keys.sizeCapMB: 20,
+            // v0.2.6 bumped from 20 → 50 MB to fit typical design-app
+            // copies (Illustrator artboards, Keynote slide objects, etc.)
+            // once the snapshot pipeline started carrying every pasteboard
+            // type at capture instead of just the primary image rep.
+            Keys.sizeCapMB: 50,
             Keys.autoPaste: true,
             Keys.historySize: 9,
             Keys.pasteAsPlainText: false,

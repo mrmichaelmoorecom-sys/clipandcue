@@ -26,11 +26,33 @@ struct ClipItem: Identifiable {
     var pixelWidth: Int?
     var pixelHeight: Int?
 
-    // files (security-scoped paths copied from Finder)
+    // files (plain paths copied from Finder — app isn't sandboxed)
     var filePaths: [String]?
+
+    /// Full snapshot of every type/data pair that was on the pasteboard at
+    /// capture, with each individual representation capped at the user's
+    /// size limit. Used by Paster to write the *exact* original pasteboard
+    /// state back when the user picks this clip, so apps that own private
+    /// pasteboard types (Illustrator's `com.adobe.illustrator.aip`,
+    /// Keynote's `com.apple.iWork.TSPNativeObject`, etc.) get an editable
+    /// paste-back instead of a flattened PDF / TIFF.
+    ///
+    /// Nil for:
+    /// - `.files` clips (paste uses sequential file-URL ⌘V cycles instead).
+    /// - Clips captured by older app versions (legacy fields are used as
+    ///   the fallback paste path in `Paster.writeToPasteboard`).
+    /// - Clips pulled from CloudKit (sync only carries text + image).
+    var pasteboardSnapshot: [String: Data]?
 
     /// User-pinned (favorite): sorted to the top and protected from eviction.
     var pinned: Bool = false
+
+    /// User-assigned name, set via the dropdown's right-click → Rename.
+    /// When non-nil, overrides the computed primary label in row displays
+    /// (e.g. a multi-file stack shows "Q3 hero exports" instead of
+    /// "IMG_3924.png +5 more"). The underlying file paths and snapshot
+    /// are untouched.
+    var customLabel: String?
 
     init(kind: ClipKind,
          id: UUID = UUID(),
@@ -43,7 +65,9 @@ struct ClipItem: Identifiable {
          pixelWidth: Int? = nil,
          pixelHeight: Int? = nil,
          filePaths: [String]? = nil,
-         pinned: Bool = false) {
+         pasteboardSnapshot: [String: Data]? = nil,
+         pinned: Bool = false,
+         customLabel: String? = nil) {
         self.id = id
         self.kind = kind
         self.createdAt = createdAt
@@ -55,17 +79,28 @@ struct ClipItem: Identifiable {
         self.pixelWidth = pixelWidth
         self.pixelHeight = pixelHeight
         self.filePaths = filePaths
+        self.pasteboardSnapshot = pasteboardSnapshot
         self.pinned = pinned
+        self.customLabel = customLabel
     }
 
-    /// Approximate stored byte size, used for the size cap.
+    /// Approximate stored byte size — drives the "PNG · 27 MB" label.
+    ///
+    /// When `pasteboardSnapshot` exists, the legacy preview fields
+    /// (`imageData`, `rtfData`, `text`) hold the *same* bytes that already
+    /// live inside the snapshot dict. Summing both double-counts the heavy
+    /// reps (a 27 MB TIFF reads as 54 MB), so the snapshot is the single
+    /// source of truth when it's present.
     var byteSize: Int {
-        var n = 0
-        n += text?.utf8.count ?? 0
-        n += rtfData?.count ?? 0
-        n += imageData?.count ?? 0
-        n += thumbnailData?.count ?? 0
+        var n = thumbnailData?.count ?? 0
         n += (filePaths?.reduce(0) { $0 + $1.utf8.count }) ?? 0
+        if let snap = pasteboardSnapshot {
+            n += snap.values.reduce(0) { $0 + $1.count }
+        } else {
+            n += text?.utf8.count ?? 0
+            n += rtfData?.count ?? 0
+            n += imageData?.count ?? 0
+        }
         return n
     }
 
@@ -84,8 +119,13 @@ struct ClipItem: Identifiable {
 
     // MARK: Display
 
-    /// First line, whitespace-collapsed, truncated for the list.
+    /// First line, whitespace-collapsed, truncated for the list. A user-set
+    /// `customLabel` always wins so renamed stacks read with their nickname.
     var displayPrimary: String {
+        if let label = customLabel?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !label.isEmpty {
+            return label
+        }
         switch kind {
         case .text, .richText:
             return Self.firstLine(text ?? "", max: 60)
@@ -110,7 +150,12 @@ struct ClipItem: Identifiable {
         case .richText:
             return "Rich text"
         case .image:
-            let ext = (imageUTType?.contains("png") ?? false) ? "PNG" : "Image"
+            let ut = imageUTType ?? ""
+            let ext: String
+            if ut.contains("pdf") { ext = "PDF" }
+            else if ut.contains("png") { ext = "PNG" }
+            else if ut.contains("tiff") { ext = "TIFF" }
+            else { ext = "Image" }
             return "\(ext) · \(Self.humanSize(byteSize))"
         case .files:
             return (filePaths?.count ?? 0) == 1 ? "File" : "Files"

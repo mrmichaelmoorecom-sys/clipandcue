@@ -93,6 +93,10 @@ final class StatusItemController: NSObject {
                 self?.closePopover()
                 self?.onPickFile?(idx, fi)
             },
+            onRename: { [weak self] id, current in
+                self?.closePopover()
+                self?.presentRenameDialog(itemID: id, currentLabel: current)
+            },
             onClear: { [weak self] in self?.store.clear() },
             onExport: { [weak self] in
                 self?.closePopover()
@@ -130,6 +134,30 @@ final class StatusItemController: NSObject {
     private func handlePick(_ index: Int) {
         closePopover()
         onPick?(index)
+    }
+
+    /// Show an NSAlert with an editable text field for the row's name.
+    /// Closes the popover first because NSAlert is a modal dialog and the
+    /// popover dismisses on focus loss anyway. Empty/whitespace input
+    /// clears the custom label and reverts to the computed default.
+    private func presentRenameDialog(itemID: UUID, currentLabel: String?) {
+        let alert = NSAlert()
+        alert.messageText = "Rename this stack"
+        alert.informativeText = "Give this group of files a name. Leave it blank to use the default."
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.stringValue = currentLabel ?? ""
+        field.placeholderString = "e.g. Q3 hero exports"
+        alert.accessoryView = field
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        // Make sure the text field gets first responder so the user can
+        // start typing immediately.
+        DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return }
+        let trimmed = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        store.setLabel(id: itemID, label: trimmed.isEmpty ? nil : trimmed)
     }
 
     // MARK: Not-saved warning

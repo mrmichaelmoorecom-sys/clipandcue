@@ -96,6 +96,31 @@ final class Paster {
         let pb = NSPasteboard.general
         onWillWritePasteboard?()
         pb.clearContents()
+
+        // High-fidelity path: replay every pasteboard type captured at copy.
+        // Apps that own private types (Illustrator's AICB, Keynote's TSP*,
+        // Word's OOXML, Sketch / Affinity / Office etc.) see the exact same
+        // pasteboard the user had at copy time, so paste-back is editable
+        // instead of a flattened PDF.
+        if let snap = item.pasteboardSnapshot, !snap.isEmpty, item.kind != .files {
+            // For richText clips honor the user's "paste as plain text" pref
+            // by stripping format reps before writing.
+            let toWrite: [String: Data]
+            if item.kind == .richText && AppSettings.shared.pasteAsPlainText {
+                toWrite = snap.filter { (k, _) in
+                    k == "public.utf8-plain-text" || k == "public.text"
+                }
+            } else {
+                toWrite = snap
+            }
+            for (type, data) in toWrite {
+                pb.setData(data, forType: NSPasteboard.PasteboardType(type))
+            }
+            return
+        }
+
+        // Fallback path: legacy clips (pre-v0.2.6), CloudKit-pulled clips,
+        // and .files clips. Same per-kind writes as before.
         switch item.kind {
         case .text:
             if let t = item.text { pb.setString(t, forType: .string) }
@@ -106,9 +131,18 @@ final class Paster {
             if let t = item.text { pb.setString(t, forType: .string) }
         case .image:
             if let data = item.imageData {
-                let type: NSPasteboard.PasteboardType =
-                    (item.imageUTType?.contains("png") == true) ? .png : .tiff
+                let ut = item.imageUTType ?? ""
+                let type: NSPasteboard.PasteboardType
+                if ut.contains("pdf") {
+                    type = NSPasteboard.PasteboardType("com.adobe.pdf")
+                } else if ut.contains("png") {
+                    type = .png
+                } else {
+                    type = .tiff
+                }
                 pb.setData(data, forType: type)
+                // Add a TIFF raster fallback for apps that don't accept the
+                // primary type (PDF in particular).
                 if type != .tiff, let img = NSImage(data: data),
                    let tiff = img.tiffRepresentation {
                     pb.setData(tiff, forType: .tiff)
@@ -117,9 +151,6 @@ final class Paster {
         case .files:
             if let paths = item.filePaths {
                 if paths.count == 1, let path = paths.first {
-                    // Single-file clip: write rich representations so apps
-                    // that don't accept file-URL paste (Illustrator) still
-                    // receive the image / PDF content.
                     Self.writeFile(at: path, to: pb)
                 } else {
                     let urls = paths.map { URL(fileURLWithPath: $0) as NSURL }
