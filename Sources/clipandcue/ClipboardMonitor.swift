@@ -13,11 +13,12 @@ final class ClipboardMonitor {
     private let pasteboard = NSPasteboard.general
     private var timer: Timer?
     private var lastChangeCount: Int
-    /// When true, the next pasteboard change tick is treated as our own
-    /// (e.g. the user picked an item from the menu and we re-wrote it to the
-    /// pasteboard to synthesize ⌘V). We just bump lastChangeCount and skip
-    /// adding it to history — so pasting a clip doesn't reorder it to the top.
-    private var skipNextChange = false
+    /// How many upcoming pasteboard change ticks to treat as our own writes
+    /// (i.e. we re-wrote the pasteboard to synthesize ⌘V) and skip. A counter
+    /// rather than a flag so multi-file sequential paste — which performs N
+    /// pasteboard writes — suppresses all of its own ticks instead of just
+    /// the first one.
+    private var skipChangeCount = 0
 
     init(store: ClipStore) {
         self.store = store
@@ -38,11 +39,12 @@ final class ClipboardMonitor {
         timer = nil
     }
 
-    /// Tell the monitor to ignore the very next pasteboard change — used when
+    /// Tell the monitor to ignore the next pasteboard change — used when
     /// clipandcue itself writes to the pasteboard (e.g. delivering a picked
     /// clip) so the just-pasted item doesn't get re-added to the top.
+    /// Stacks: call N times to suppress the next N changes.
     func suppressNextChange() {
-        skipNextChange = true
+        skipChangeCount += 1
     }
 
     private func poll() {
@@ -50,8 +52,8 @@ final class ClipboardMonitor {
         guard current != lastChangeCount else { return }
         lastChangeCount = current
 
-        if skipNextChange {
-            skipNextChange = false
+        if skipChangeCount > 0 {
+            skipChangeCount -= 1
             return
         }
 
@@ -98,7 +100,8 @@ final class ClipboardMonitor {
             options: [.urlReadingFileURLsOnly: true]) as? [URL],
            !urls.isEmpty {
             let paths = urls.map { $0.path }
-            return .item(ClipItem(kind: .files, filePaths: paths))
+            let thumb = paths.first.flatMap { Self.fileThumbnail(forPath: $0) }
+            return .item(ClipItem(kind: .files, thumbnailData: thumb, filePaths: paths))
         }
 
         // 2. Image data (screenshots, copied image regions).
@@ -139,6 +142,21 @@ final class ClipboardMonitor {
         }
 
         return .none
+    }
+
+    /// For a file-kind clip, generate an inline preview when the first path
+    /// points at an image NSImage knows how to load (jpg/png/heic/gif/tiff/pdf).
+    /// Returns nil for everything else so the row falls back to the generic
+    /// file icon. Capped by file size so we don't read a 200 MB raw onto main.
+    private static func fileThumbnail(forPath path: String) -> Data? {
+        let maxFileBytes = 50 * 1024 * 1024
+        if let size = try? FileManager.default
+            .attributesOfItem(atPath: path)[.size] as? Int,
+           size > maxFileBytes {
+            return nil
+        }
+        guard let image = NSImage(contentsOfFile: path) else { return nil }
+        return ImageUtils.thumbnailPNG(from: image, maxDimension: 96)
     }
 
     /// Prefer PNG, fall back to TIFF.

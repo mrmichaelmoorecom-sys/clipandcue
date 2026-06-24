@@ -11,6 +11,11 @@ struct QuickPasteHUDView: View {
     @ObservedObject var store: ClipStore
     @ObservedObject var model: QuickPasteModel
     var onPick: (Int) -> Void
+    /// Paste a single file out of a multi-file clip — `(itemIdx, fileIdx)`.
+    var onPickFile: (Int, Int) -> Void
+
+    /// Item ids whose multi-file sub-list is currently expanded.
+    @State private var expandedItems: Set<UUID> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,17 +27,39 @@ struct QuickPasteHUDView: View {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 3) {
                             ForEach(Array(store.items.enumerated()), id: \.element.id) { idx, item in
-                                ClipRowView(index: idx, item: item, large: true,
-                                            numbered: idx < 9)
-                                    .id(idx)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                            .fill(idx == model.selection
-                                                  ? Color.accentColor.opacity(0.28)
-                                                  : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
-                                    )
-                                    .contentShape(Rectangle())
-                                    .onTapGesture { onPick(idx) }
+                                let multi = Self.isMultiFile(item)
+                                let expanded = expandedItems.contains(item.id)
+                                VStack(spacing: 0) {
+                                    ClipRowView(index: idx, item: item, large: true,
+                                                numbered: idx < 9,
+                                                isExpanded: expanded,
+                                                onToggleExpand: multi ? { toggleExpand(item.id) } : nil)
+                                        .id(idx)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                                .fill(idx == model.selection
+                                                      ? Color.accentColor.opacity(0.28)
+                                                      : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
+                                        )
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { onPick(idx) }
+
+                                    if multi && expanded, let paths = item.filePaths {
+                                        VStack(spacing: 0) {
+                                            ForEach(Array(paths.enumerated()), id: \.offset) { (fi, path) in
+                                                FileSubRowView(path: path, large: true) {
+                                                    onPickFile(idx, fi)
+                                                }
+                                            }
+                                        }
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                                .fill(Color.white.opacity(0.06))
+                                        )
+                                        .padding(.top, 2)
+                                    }
+                                }
                             }
                         }
                         .padding(8)
@@ -82,5 +109,17 @@ struct QuickPasteHUDView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 26)
+    }
+
+    private static func isMultiFile(_ item: ClipItem) -> Bool {
+        item.kind == .files && (item.filePaths?.count ?? 0) > 1
+    }
+
+    private func toggleExpand(_ id: UUID) {
+        if expandedItems.contains(id) {
+            expandedItems.remove(id)
+        } else {
+            expandedItems.insert(id)
+        }
     }
 }

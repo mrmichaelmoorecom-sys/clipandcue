@@ -49,6 +49,10 @@ struct ClipRowView: View {
     var numbered: Bool = true
     /// When set, the number badge becomes a button that pins/unpins the item.
     var onTogglePin: (() -> Void)? = nil
+    /// When set, a chevron is shown on the trailing edge that toggles a
+    /// per-file sub-list (used by multi-file clips).
+    var isExpanded: Bool = false
+    var onToggleExpand: (() -> Void)? = nil
 
     private var thumbSide: CGFloat { large ? 40 : 26 }
 
@@ -69,10 +73,28 @@ struct ClipRowView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
+
+            if let onToggleExpand {
+                Button(action: onToggleExpand) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        .frame(width: 18, height: 18)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(isExpanded ? "Hide files" : "Show files")
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, large ? 8 : 6)
         .contentShape(Rectangle())
+        // Drag this row into any other app — text drops as text, images as
+        // images, files as their file URL. Quick-tap still pastes; press +
+        // drag initiates the system drag. The Button on the badge keeps its
+        // own click handling for pinning.
+        .onDrag { item.dragProvider() }
     }
 
     @ViewBuilder

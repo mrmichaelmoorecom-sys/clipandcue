@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
+        sc.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
         sc.onPreferences = { [weak self] in self?.openPreferences() }
         sc.onHowTo = { [weak self] in self?.openHowTo() }
         sc.onExport = { [weak self] in
@@ -29,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let qp = QuickPasteController(store: store)
         qp.onPick = { [weak self] idx in self?.paste(index: idx) }
+        qp.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
         quickPaste = qp
 
         let hk = GlobalHotkey()
@@ -48,6 +50,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                       modifiers: UInt32(mods))
             }
             .store(in: &cancellables)
+
+        // Suppress one monitor tick per pasteboard write Paster performs. For
+        // single pastes that's one; for multi-file sequential pastes that's N.
+        // The counter inside ClipboardMonitor stacks these correctly.
+        Paster.shared.onWillWritePasteboard = { [weak self] in
+            self?.monitor?.suppressNextChange()
+        }
 
         let m = ClipboardMonitor(store: store)
         m.onOversized = { [weak self] bytes, label in
@@ -96,9 +105,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func paste(index: Int) {
         guard let item = store.item(at: index) else { return }
-        // Don't let our own re-write of the pasteboard reorder the item.
-        monitor.suppressNextChange()
         Paster.shared.deliver(item, autoPaste: settings.autoPaste)
+    }
+
+    /// Paste a single file out of a multi-file clip — used when the user
+    /// expands a files row and clicks one of the sub-rows.
+    private func pasteFile(itemIndex: Int, fileIndex: Int) {
+        guard let item = store.item(at: itemIndex),
+              let paths = item.filePaths,
+              paths.indices.contains(fileIndex) else { return }
+        let single = ClipItem(kind: .files, filePaths: [paths[fileIndex]])
+        Paster.shared.deliver(single, autoPaste: settings.autoPaste)
     }
 
     private func openPreferences() {

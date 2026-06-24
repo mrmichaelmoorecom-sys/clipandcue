@@ -5,6 +5,8 @@ struct MenuListView: View {
     @ObservedObject var store: ClipStore
     @ObservedObject private var settings = AppSettings.shared
     var onPick: (Int) -> Void
+    /// Paste just one file out of a multi-file clip — `(itemIdx, fileIdx)`.
+    var onPickFile: (Int, Int) -> Void
     var onClear: () -> Void
     var onExport: () -> Void
     var onPreferences: () -> Void
@@ -15,6 +17,8 @@ struct MenuListView: View {
     @State private var searchActive: Bool = false
     @State private var searchText: String = ""
     @FocusState private var searchFocused: Bool
+    /// Item ids whose multi-file sub-list is currently expanded.
+    @State private var expandedItems: Set<UUID> = []
 
     /// (original-store-index, item) pairs after applying the search filter.
     /// Always carries the *unfiltered* index so the badge number stays stable
@@ -100,22 +104,51 @@ struct MenuListView: View {
         ScrollView {
             VStack(spacing: 0) {
                 ForEach(filteredEntries, id: \.item.id) { entry in
-                    ClipRowView(index: entry.idx, item: entry.item,
-                                numbered: entry.idx < 9,
-                                onTogglePin: { store.togglePin(id: entry.item.id) })
-                        .background(hoverIndex == entry.idx
-                                    ? Color.accentColor.opacity(0.15)
-                                    : (entry.item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
-                        .onHover { inside in
-                            hoverIndex = inside ? entry.idx : (hoverIndex == entry.idx ? nil : hoverIndex)
+                    let multi = Self.isMultiFile(entry.item)
+                    let expanded = expandedItems.contains(entry.item.id)
+                    VStack(spacing: 0) {
+                        ClipRowView(
+                            index: entry.idx, item: entry.item,
+                            numbered: entry.idx < 9,
+                            onTogglePin: { store.togglePin(id: entry.item.id) },
+                            isExpanded: expanded,
+                            onToggleExpand: multi ? { toggleExpand(entry.item.id) } : nil)
+                            .background(hoverIndex == entry.idx
+                                        ? Color.accentColor.opacity(0.15)
+                                        : (entry.item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
+                            .onHover { inside in
+                                hoverIndex = inside ? entry.idx : (hoverIndex == entry.idx ? nil : hoverIndex)
+                            }
+                            .onTapGesture { onPick(entry.idx) }
+
+                        if multi && expanded, let paths = entry.item.filePaths {
+                            VStack(spacing: 0) {
+                                ForEach(Array(paths.enumerated()), id: \.offset) { (fi, path) in
+                                    FileSubRowView(path: path) { onPickFile(entry.idx, fi) }
+                                }
+                            }
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.06))
                         }
-                        .onTapGesture { onPick(entry.idx) }
+                    }
                 }
             }
             // Breathing room between the last row and the footer divider.
             .padding(.bottom, 8)
         }
         .frame(maxHeight: 368)
+    }
+
+    private static func isMultiFile(_ item: ClipItem) -> Bool {
+        item.kind == .files && (item.filePaths?.count ?? 0) > 1
+    }
+
+    private func toggleExpand(_ id: UUID) {
+        if expandedItems.contains(id) {
+            expandedItems.remove(id)
+        } else {
+            expandedItems.insert(id)
+        }
     }
 
     private var emptyState: some View {

@@ -10,6 +10,9 @@ final class QuickPastePanel: NSPanel {
 /// Shows/hides the floating Quick Paste HUD and handles its key input.
 final class QuickPasteController: NSObject, NSWindowDelegate {
     var onPick: ((Int) -> Void)?
+    /// Paste a single file from an expanded multi-file clip.
+    /// `(itemIndex, fileIndex)` resolves against the store.
+    var onPickFile: ((Int, Int) -> Void)?
 
     private let store: ClipStore
     private let model = QuickPasteModel()
@@ -31,7 +34,11 @@ final class QuickPasteController: NSObject, NSWindowDelegate {
         model.selection = 0
 
         let hud = QuickPasteHUDView(store: store, model: model,
-                                    onPick: { [weak self] idx in self?.select(idx) })
+                                    onPick: { [weak self] idx in self?.select(idx) },
+                                    onPickFile: { [weak self] idx, fi in
+                                        self?.hide()
+                                        self?.onPickFile?(idx, fi)
+                                    })
         let host = NSHostingView(rootView: hud)
         host.layoutSubtreeIfNeeded()
         let size = host.fittingSize

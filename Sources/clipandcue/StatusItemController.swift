@@ -8,6 +8,9 @@ final class StatusItemController: NSObject {
     private var warningTimer: Timer?
 
     var onPick: ((Int) -> Void)?
+    /// Paste a single file from an expanded multi-file clip.
+    /// `(itemIndex, fileIndex)` resolves against the store.
+    var onPickFile: ((Int, Int) -> Void)?
     var onPreferences: (() -> Void)?
     var onHowTo: (() -> Void)?
     var onExport: (() -> Void)?
@@ -86,6 +89,10 @@ final class StatusItemController: NSObject {
         let root = MenuListView(
             store: store,
             onPick: { [weak self] idx in self?.handlePick(idx) },
+            onPickFile: { [weak self] idx, fi in
+                self?.closePopover()
+                self?.onPickFile?(idx, fi)
+            },
             onClear: { [weak self] in self?.store.clear() },
             onExport: { [weak self] in
                 self?.closePopover()

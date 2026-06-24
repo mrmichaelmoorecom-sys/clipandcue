@@ -5,6 +5,12 @@ import AppKit
 final class Paster {
     static let shared = Paster()
 
+    /// Fired immediately before any pasteboard write Paster does. AppDelegate
+    /// hooks this to `ClipboardMonitor.suppressNextChange()` so our rewrites
+    /// don't reorder/recapture the clip we just delivered. Stacks correctly
+    /// across the N writes a multi-file sequential paste performs.
+    var onWillWritePasteboard: (() -> Void)?
+
     private var targetApp: NSRunningApplication?
 
     /// Capture the foreground app before we show the menu/HUD, so we can paste back into it.
@@ -34,13 +40,61 @@ final class Paster {
             return
         }
         targetApp?.activate(options: [.activateIgnoringOtherApps])
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
-            self?.sendCommandV()
+
+        // Multi-file clip: paste each file in its own ⌘V cycle. Photoshop,
+        // Illustrator, and similar apps only consume the first pasteboard
+        // item per paste, so a single ⌘V with N file URLs drops files 2..N.
+        // Sequential pastes (each with one URL on the pasteboard) reliably
+        // give all of them — including in apps like Keynote that handle
+        // multi-paste natively.
+        if item.kind == .files, let paths = item.filePaths, paths.count > 1 {
+            sendMultiFilePaste(paths)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+                self?.sendCommandV()
+            }
+        }
+    }
+
+    private func sendMultiFilePaste(_ paths: [String]) {
+        let leadIn: TimeInterval = 0.18
+        // Illustrator finishes a paste noticeably slower than Photoshop /
+        // Keynote — half a second between cycles keeps the sequence reliable
+        // there without feeling laggy in faster apps.
+        let step: TimeInterval = 0.50
+        let pb = NSPasteboard.general
+        for (i, path) in paths.enumerated() {
+            let delay = leadIn + Double(i) * step
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.onWillWritePasteboard?()
+                pb.clearContents()
+                Self.writeFile(at: path, to: pb)
+                self?.sendCommandV()
+            }
+        }
+    }
+
+    /// Write one file to the pasteboard with the richest representations the
+    /// content allows: always the file URL (so Finder, Mail, web inputs etc.
+    /// see it as a file), plus a raster TIFF for image files and the raw PDF
+    /// bytes for `.pdf` / `.ai` / `.eps` so apps that ignore file-URL pastes
+    /// (notably Illustrator) still receive the content.
+    private static func writeFile(at path: String, to pb: NSPasteboard) {
+        let url = URL(fileURLWithPath: path)
+        pb.writeObjects([url as NSURL])
+        let ext = (path as NSString).pathExtension.lowercased()
+        if ["pdf", "ai", "eps"].contains(ext),
+           let data = try? Data(contentsOf: url) {
+            pb.setData(data, forType: NSPasteboard.PasteboardType("com.adobe.pdf"))
+        } else if let image = NSImage(contentsOfFile: path),
+                  let tiff = image.tiffRepresentation {
+            pb.setData(tiff, forType: .tiff)
         }
     }
 
     private func writeToPasteboard(_ item: ClipItem) {
         let pb = NSPasteboard.general
+        onWillWritePasteboard?()
         pb.clearContents()
         switch item.kind {
         case .text:
@@ -62,8 +116,15 @@ final class Paster {
             }
         case .files:
             if let paths = item.filePaths {
-                let urls = paths.map { URL(fileURLWithPath: $0) as NSURL }
-                pb.writeObjects(urls)
+                if paths.count == 1, let path = paths.first {
+                    // Single-file clip: write rich representations so apps
+                    // that don't accept file-URL paste (Illustrator) still
+                    // receive the image / PDF content.
+                    Self.writeFile(at: path, to: pb)
+                } else {
+                    let urls = paths.map { URL(fileURLWithPath: $0) as NSURL }
+                    pb.writeObjects(urls)
+                }
             }
         }
     }
