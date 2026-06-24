@@ -98,9 +98,7 @@ To produce a **Developer ID-signed, notarized** release dmg instead, see
 
 ## Privacy note
 
-By default clipandcue **captures everything**, including clipboard items password
-managers mark as concealed/transient. That means a copied password can land in the
-history and is **stored unencrypted on disk** in your *user* Library:
+clipandcue stores your clip history **unencrypted on disk** in your *user* Library:
 
 ```
 ~/Library/Application Support/clipandcue/
@@ -111,10 +109,23 @@ history and is **stored unencrypted on disk** in your *user* Library:
 > Finder hides `~/Library` by default. To navigate to the folder, open Finder,
 > press **⌘⇧G** (Go → Go to Folder…), paste the path, and press Return.
 
-To harden this: turn on **Ignore items from password managers** and/or **Clear
-history when I quit** in Preferences, or use **Clear** anytime. The capture path is
-also written so that encrypting blobs at rest can be added later with a small change
-in `ClipboardMonitor` / `ClipStore`.
+By default (as of v0.2.4):
+
+- **Sync with my other devices** is **off**. Nothing leaves your Mac unless you
+  turn it on. When you do enable it, text and image clips sync through your
+  private iCloud database to any other Mac you sign in with clipandcue and to
+  the companion iPhone app. File clips never sync.
+- **Ignore items from password managers** is **on**. Clipboard copies that
+  password managers mark as concealed/transient are skipped — they aren't
+  stored on disk and never enter the sync pipeline.
+
+To harden further, also turn on **Clear history when I quit** in Preferences,
+or use **Clear** anytime. `Clear` purges the cloud copy too (with a bounded
+synchronous wait on quit so a cleared password really is gone before the
+process exits).
+
+Encrypting blobs at rest can be added later with a small change in
+`ClipboardMonitor` / `ClipStore`.
 
 ## Project layout
 

@@ -17,6 +17,13 @@ final class MacCloudKitSync {
 
     private let database: CKDatabase
 
+    /// True from the moment a purge begins until the cloud delete completes
+    /// (or times out). While set, push/pull skip — that closes the race where
+    /// a `pull` triggered by `applicationDidBecomeActive` re-adds the clips
+    /// the user just cleared, because the local store was already empty when
+    /// the in-flight delete hadn't yet drained the cloud copy.
+    private var isPurging = false
+
     init() {
         database = CKContainer(identifier: Self.containerID).privateCloudDatabase
     }
@@ -30,7 +37,8 @@ final class MacCloudKitSync {
 
     /// Push one captured clip so it reaches the iPhone promptly.
     func push(_ item: ClipItem) {
-        guard syncEnabled, iCloudAvailable, let record = Self.record(from: item) else { return }
+        guard !isPurging, syncEnabled, iCloudAvailable,
+              let record = Self.record(from: item) else { return }
         Task { _ = try? await database.modifyRecords(saving: [record], deleting: []) }
     }
 
@@ -54,6 +62,8 @@ final class MacCloudKitSync {
     /// a cleared clip (e.g. a copied password) doesn't linger in the cloud or
     /// get re-pulled. Runs even when sync is off, to purge previously-synced data.
     func deleteAll() async {
+        isPurging = true
+        defer { isPurging = false }
         guard iCloudAvailable else { return }
         let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
         do {
@@ -73,10 +83,24 @@ final class MacCloudKitSync {
         }
     }
 
+    /// Synchronous variant of `deleteAll`, intended for `applicationWillTerminate`
+    /// where the normal async Task would be killed mid-network-request before
+    /// the cloud delete completes. Blocks the calling thread for up to
+    /// `timeout` seconds; returns either way so quit isn't held forever if
+    /// iCloud is unreachable.
+    func deleteAllAndWait(timeout: TimeInterval) {
+        let sem = DispatchSemaphore(value: 0)
+        Task.detached { [weak self] in
+            await self?.deleteAll()
+            sem.signal()
+        }
+        _ = sem.wait(timeout: .now() + timeout)
+    }
+
     /// Pull recent remote clips and merge genuinely-new ones into the store.
     @MainActor
     func pull(into store: ClipStore) async {
-        guard syncEnabled, iCloudAvailable else { return }
+        guard !isPurging, syncEnabled, iCloudAvailable else { return }
         let query = CKQuery(recordType: Self.recordType, predicate: NSPredicate(value: true))
         query.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
         guard let matches = try? await database.records(

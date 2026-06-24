@@ -81,9 +81,12 @@ final class AppSettings: ObservableObject {
             Keys.autoPaste: true,
             Keys.historySize: 9,
             Keys.pasteAsPlainText: false,
-            Keys.ignoreConcealed: false,
+            // Privacy defaults (v0.2.4): both off-by-default so a fresh
+            // install never touches the network or captures password-manager
+            // copies until the user explicitly opts in via Preferences.
+            Keys.ignoreConcealed: true,
             Keys.clearOnQuit: false,
-            Keys.syncEnabled: true,
+            Keys.syncEnabled: false,
             Keys.hotkeyKeyCode: Self.defaultHotkeyKeyCode,
             Keys.hotkeyModifiers: Self.defaultHotkeyModifiers
         ])

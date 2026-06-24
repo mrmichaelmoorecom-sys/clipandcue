@@ -99,7 +99,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         if settings.clearOnQuit {
+            // Detach the normal onClear handler so we don't kick off a
+            // background `Task { await deleteAll() }` that gets killed when
+            // the process exits a few ms later. Instead wait synchronously
+            // (bounded) on the cloud delete so a cleared password really is
+            // gone before quit returns.
+            store.onClear = nil
             store.purgePersistedNow()
+            cloud.deleteAllAndWait(timeout: 5)
         }
     }
 

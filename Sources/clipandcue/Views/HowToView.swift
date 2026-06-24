@@ -41,11 +41,11 @@ struct HowToView: View {
                 }
 
                 stepCard(symbol: "lock", title: "Your history stays on your Mac") {
-                    Text("Nothing is uploaded anywhere. Use ")
+                    Text("By default nothing is uploaded — your history lives in this Mac's Application Support folder. Use ")
                     + Text("Clear").bold()
                     + Text(" in the menu, or turn on ")
                     + Text("“Clear history when I quit”").bold()
-                    + Text(" in Preferences, to wipe it.")
+                    + Text(" in Preferences, to wipe it.\n\nOpt-in iCloud sync is available in Preferences if you want clips to follow you across your Macs (and the iPhone app).")
                 }
             }
             .padding(22)
