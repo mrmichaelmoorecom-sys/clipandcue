@@ -34,6 +34,16 @@ struct HowToView: View {
                     + Text(" on a row in the menu to pin it — pinned items jump to the top and stay there, even as you keep copying. Click the badge again to unpin.")
                 }
 
+                stepCard(symbol: "hand.draw", title: "Drag clips into any app") {
+                    Text("Press and hold a row in the menu or the ") + kbd("⌘⌥V") + Text(" pop-up, then drag it out. Text drops as text, images drop as images, files drop as files — into TextEdit, Photoshop, Finder, an email, whatever's underneath.")
+                }
+
+                stepCard(symbol: "rectangle.stack", title: "Stacks for multi-file copies") {
+                    Text("Copy several files in Finder and clip and cue shows them as one row with a ")
+                    + Text("chevron").bold()
+                    + Text(" on the right. Click the chevron to fan out the individual files — each one previews, drags, and clicks-to-paste on its own. Click (or drag) the parent row to paste them all in one go.")
+                }
+
                 stepCard(symbol: "hand.raised", title: "First time: allow pasting") {
                     Text("To paste into other apps, macOS asks you to allow clip and cue under ")
                     + Text("System Settings → Privacy & Security → Accessibility").bold()
@@ -47,10 +57,27 @@ struct HowToView: View {
                     + Text("“Clear history when I quit”").bold()
                     + Text(" in Preferences, to wipe it.\n\nOpt-in iCloud sync is available in Preferences if you want clips to follow you across your Macs (and the iPhone app).")
                 }
+
+                contactFooter
             }
             .padding(22)
         }
-        .frame(width: 440, height: 540)
+        .frame(width: 440, height: 640)
+    }
+
+    private var contactFooter: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "envelope")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+            Text("Bugs, ideas, hellos:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Link("mike@toyrobotmedia.com",
+                 destination: URL(string: "mailto:mike@toyrobotmedia.com")!)
+                .font(.caption)
+        }
+        .padding(.top, 18)
     }
 
     private var header: some View {

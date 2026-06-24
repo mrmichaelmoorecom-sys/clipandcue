@@ -53,10 +53,31 @@ struct ClipRowView: View {
     /// per-file sub-list (used by multi-file clips).
     var isExpanded: Bool = false
     var onToggleExpand: (() -> Void)? = nil
+    /// Click-to-paste handler. Required because for multi-file rows an
+    /// AppKit drag overlay sits in front of the SwiftUI content (so the
+    /// `NSDraggingSession` can carry one item per file), which prevents
+    /// SwiftUI's tap gesture from receiving mouseDown.
+    var onPick: () -> Void = {}
 
     private var thumbSide: CGFloat { large ? 40 : 26 }
 
+    private var isMultiFile: Bool {
+        item.kind == .files && (item.filePaths?.count ?? 0) > 1
+    }
+
     var body: some View {
+        rowBody
+            .padding(.horizontal, 12)
+            .padding(.vertical, large ? 8 : 6)
+            .contentShape(Rectangle())
+            .modifier(InteractionModifier(item: item,
+                                          isMultiFile: isMultiFile,
+                                          leadingSkip: large ? 56 : 40,
+                                          trailingSkip: onToggleExpand != nil ? 38 : 12,
+                                          onPick: onPick))
+    }
+
+    private var rowBody: some View {
         HStack(spacing: 10) {
             badge
 
@@ -87,14 +108,6 @@ struct ClipRowView: View {
                 .help(isExpanded ? "Hide files" : "Show files")
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, large ? 8 : 6)
-        .contentShape(Rectangle())
-        // Drag this row into any other app — text drops as text, images as
-        // images, files as their file URL. Quick-tap still pastes; press +
-        // drag initiates the system drag. The Button on the badge keeps its
-        // own click handling for pinning.
-        .onDrag { item.dragProvider() }
     }
 
     @ViewBuilder
@@ -121,6 +134,38 @@ struct ClipRowView: View {
             Image(systemName: item.symbolName)
                 .font(.system(size: large ? 20 : 14))
                 .foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// Picks the right tap-and-drag wiring for a row:
+///
+/// - **Single-clip rows** stay on SwiftUI primitives: `.onTapGesture` for
+///   the click-to-paste, `.onDrag` for a single-item `NSItemProvider`.
+/// - **Multi-file rows** swap in `MultiFileDragSurface` so the drag
+///   becomes a real `NSDraggingSession` carrying one item per file
+///   (matches the click-pastes-all behavior). The overlay is inset on
+///   both ends so the badge button (pin) and the chevron button (expand)
+///   stay clickable — only the middle of the row is overlay-covered.
+private struct InteractionModifier: ViewModifier {
+    let item: ClipItem
+    let isMultiFile: Bool
+    let leadingSkip: CGFloat
+    let trailingSkip: CGFloat
+    let onPick: () -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isMultiFile, let paths = item.filePaths {
+            content.overlay(
+                MultiFileDragSurface(paths: paths, onTap: onPick)
+                    .padding(.leading, leadingSkip)
+                    .padding(.trailing, trailingSkip)
+            )
+        } else {
+            content
+                .onTapGesture(perform: onPick)
+                .onDrag { item.dragProvider() }
         }
     }
 }

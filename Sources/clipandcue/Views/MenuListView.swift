@@ -112,14 +112,14 @@ struct MenuListView: View {
                             numbered: entry.idx < 9,
                             onTogglePin: { store.togglePin(id: entry.item.id) },
                             isExpanded: expanded,
-                            onToggleExpand: multi ? { toggleExpand(entry.item.id) } : nil)
+                            onToggleExpand: multi ? { toggleExpand(entry.item.id) } : nil,
+                            onPick: { onPick(entry.idx) })
                             .background(hoverIndex == entry.idx
                                         ? Color.accentColor.opacity(0.15)
                                         : (entry.item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
                             .onHover { inside in
                                 hoverIndex = inside ? entry.idx : (hoverIndex == entry.idx ? nil : hoverIndex)
                             }
-                            .onTapGesture { onPick(entry.idx) }
 
                         if multi && expanded, let paths = entry.item.filePaths {
                             VStack(spacing: 0) {

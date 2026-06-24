@@ -33,7 +33,8 @@ struct QuickPasteHUDView: View {
                                     ClipRowView(index: idx, item: item, large: true,
                                                 numbered: idx < 9,
                                                 isExpanded: expanded,
-                                                onToggleExpand: multi ? { toggleExpand(item.id) } : nil)
+                                                onToggleExpand: multi ? { toggleExpand(item.id) } : nil,
+                                                onPick: { onPick(idx) })
                                         .id(idx)
                                         .background(
                                             RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -42,7 +43,6 @@ struct QuickPasteHUDView: View {
                                                       : (item.pinned ? Color.accentColor.opacity(0.10) : Color.clear))
                                         )
                                         .contentShape(Rectangle())
-                                        .onTapGesture { onPick(idx) }
 
                                     if multi && expanded, let paths = item.filePaths {
                                         VStack(spacing: 0) {
