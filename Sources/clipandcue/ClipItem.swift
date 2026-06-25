@@ -6,6 +6,11 @@ enum ClipKind: String, Codable {
     case richText
     case image
     case files
+    /// User-assembled stack: owns an ordered list of `children` (any kinds
+    /// allowed, including other multi-file clips). Created by dragging
+    /// one row onto another in the menu bar dropdown. Nested groups are
+    /// flattened on creation so the UI tree is always one level deep.
+    case group
 }
 
 /// A single captured clipboard entry. Held fully in memory; `ClipStore`
@@ -44,6 +49,11 @@ struct ClipItem: Identifiable {
     /// - Clips pulled from CloudKit (sync only carries text + image).
     var pasteboardSnapshot: [String: Data]?
 
+    /// `.group` only — the ordered child clips contained in this stack.
+    /// Persisted recursively; one level deep is enforced at insertion
+    /// time so the rendering and paste logic stay simple.
+    var children: [ClipItem]?
+
     /// User-pinned (favorite): sorted to the top and protected from eviction.
     var pinned: Bool = false
 
@@ -66,6 +76,7 @@ struct ClipItem: Identifiable {
          pixelHeight: Int? = nil,
          filePaths: [String]? = nil,
          pasteboardSnapshot: [String: Data]? = nil,
+         children: [ClipItem]? = nil,
          pinned: Bool = false,
          customLabel: String? = nil) {
         self.id = id
@@ -80,6 +91,7 @@ struct ClipItem: Identifiable {
         self.pixelHeight = pixelHeight
         self.filePaths = filePaths
         self.pasteboardSnapshot = pasteboardSnapshot
+        self.children = children
         self.pinned = pinned
         self.customLabel = customLabel
     }
@@ -91,6 +103,9 @@ struct ClipItem: Identifiable {
     /// live inside the snapshot dict. Summing both double-counts the heavy
     /// reps (a 27 MB TIFF reads as 54 MB), so the snapshot is the single
     /// source of truth when it's present.
+    ///
+    /// Groups recursively sum their children's byteSize, so a group label
+    /// reflects the total weight of everything inside.
     var byteSize: Int {
         var n = thumbnailData?.count ?? 0
         n += (filePaths?.reduce(0) { $0 + $1.utf8.count }) ?? 0
@@ -101,10 +116,12 @@ struct ClipItem: Identifiable {
             n += rtfData?.count ?? 0
             n += imageData?.count ?? 0
         }
+        n += children?.reduce(0) { $0 + $1.byteSize } ?? 0
         return n
     }
 
-    /// Two items dedupe when their content matches.
+    /// Two items dedupe when their content matches. Groups are
+    /// user-assembled and never dedupe (each carries the user's intent).
     func sameContent(as other: ClipItem) -> Bool {
         guard kind == other.kind else { return false }
         switch kind {
@@ -114,6 +131,8 @@ struct ClipItem: Identifiable {
             return imageData == other.imageData
         case .files:
             return filePaths == other.filePaths
+        case .group:
+            return false
         }
     }
 
@@ -139,6 +158,10 @@ struct ClipItem: Identifiable {
             let name = (first as NSString).lastPathComponent
             if paths.count > 1 { return "\(name)  +\(paths.count - 1) more" }
             return name
+        case .group:
+            guard let kids = children, let first = kids.first else { return "Empty group" }
+            if kids.count > 1 { return "\(first.displayPrimary)  +\(kids.count - 1) more" }
+            return first.displayPrimary
         }
     }
 
@@ -159,6 +182,9 @@ struct ClipItem: Identifiable {
             return "\(ext) · \(Self.humanSize(byteSize))"
         case .files:
             return (filePaths?.count ?? 0) == 1 ? "File" : "Files"
+        case .group:
+            let n = children?.count ?? 0
+            return "Group · \(n) item\(n == 1 ? "" : "s")"
         }
     }
 
@@ -167,10 +193,16 @@ struct ClipItem: Identifiable {
         case .text, .richText: return "text.alignleft"
         case .image: return "photo"
         case .files: return "doc"
+        case .group: return "rectangle.stack"
         }
     }
 
     var thumbnailImage: NSImage? {
+        // Groups borrow the first child's thumbnail so the row visually
+        // signals what's inside the stack.
+        if kind == .group, let first = children?.first {
+            return first.thumbnailImage
+        }
         guard let data = thumbnailData else { return nil }
         return NSImage(data: data)
     }

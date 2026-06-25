@@ -55,6 +55,64 @@ final class ClipStore: ObservableObject {
         scheduleSave()
     }
 
+    /// Drag-to-group: combine `droppedID` into `targetID`. If the target
+    /// is already a group, the dropped item is appended to its children;
+    /// otherwise a fresh `.group` clip is created in the target's slot
+    /// holding `[target, dropped]`. The dropped clip's pinned + position
+    /// are dropped; the new group inherits the target's pinned state.
+    /// One-level enforcement: if the dropped item is itself a group, its
+    /// children are flattened in.
+    func groupItems(droppedID: UUID, ontoTargetID targetID: UUID) {
+        guard droppedID != targetID,
+              let droppedIdx = items.firstIndex(where: { $0.id == droppedID }),
+              let initialTargetIdx = items.firstIndex(where: { $0.id == targetID }) else { return }
+        let dropped = items[droppedIdx]
+        items.remove(at: droppedIdx)
+        // Removing the dropped item shifts the target's index if it was below.
+        let targetIdx = (droppedIdx < initialTargetIdx) ? initialTargetIdx - 1 : initialTargetIdx
+        let target = items[targetIdx]
+
+        let droppedChildren = (dropped.kind == .group) ? (dropped.children ?? []) : [dropped]
+
+        if target.kind == .group {
+            var updated = target
+            updated.children = (target.children ?? []) + droppedChildren
+            items[targetIdx] = updated
+        } else {
+            var newGroup = ClipItem(
+                kind: .group,
+                children: [target] + droppedChildren,
+                pinned: target.pinned)
+            // Preserve the target's custom label on the new group.
+            newGroup.customLabel = target.customLabel
+            items[targetIdx] = newGroup
+        }
+        scheduleSave()
+    }
+
+    /// Flatten a group back into top-level rows at the group's position,
+    /// newest-on-top order preserved. Pinned state of the group is
+    /// dropped; children come back unpinned (they can be re-pinned).
+    func ungroupItem(id: UUID) {
+        guard let idx = items.firstIndex(where: { $0.id == id }),
+              items[idx].kind == .group,
+              let kids = items[idx].children, !kids.isEmpty else { return }
+        items.remove(at: idx)
+        items.insert(contentsOf: kids, at: idx)
+        enforceCap()
+        scheduleSave()
+    }
+
+    /// Paste a single child of a group at `groupID`. Returns the resolved
+    /// child if it exists, so AppDelegate can hand it to Paster.
+    func child(groupID: UUID, childIndex: Int) -> ClipItem? {
+        guard let group = items.first(where: { $0.id == groupID }),
+              group.kind == .group,
+              let kids = group.children,
+              kids.indices.contains(childIndex) else { return nil }
+        return kids[childIndex]
+    }
+
     /// Pin/unpin an item. Pinning jumps it to the very top; unpinning drops it
     /// to the top of the unpinned section. Pinned items survive eviction.
     func togglePin(id: UUID) {
@@ -127,6 +185,11 @@ final class ClipStore: ObservableObject {
         /// User-assigned label (right-click → Rename). Optional for
         /// backward-compat with older history.json files.
         let customLabel: String?
+        /// `.group` only — recursive child list. Each child carries its
+        /// own blobs (snap / thumb / image / rtf) keyed by its own UUID
+        /// alongside top-level items in `blobs/`. Optional for
+        /// backward-compat with pre-group history.json.
+        let children: [PersistedItem]?
     }
 
     private func scheduleSave() {
@@ -145,53 +208,7 @@ final class ClipStore: ObservableObject {
         try? fm.createDirectory(at: blobsDir, withIntermediateDirectories: true)
 
         var keep = Set<String>()
-        var dtos: [PersistedItem] = []
-
-        for item in items {
-            let hasSnapshot = (item.pasteboardSnapshot?.isEmpty == false)
-
-            // The full image/RTF reps are duplicated inside the snapshot when
-            // it exists, so only write the standalone .full / .rtf blobs for
-            // legacy / cloud-pulled clips (no snapshot). Halves disk usage
-            // for design copies that otherwise stored the same TIFF twice.
-            if !hasSnapshot, let data = item.imageData {
-                let url = blobURL(item.id, "full")
-                try? data.write(to: url, options: .atomic)
-                keep.insert(url.lastPathComponent)
-            }
-            if let data = item.thumbnailData {
-                let url = blobURL(item.id, "thumb")
-                try? data.write(to: url, options: .atomic)
-                keep.insert(url.lastPathComponent)
-            }
-            if !hasSnapshot, let data = item.rtfData {
-                let url = blobURL(item.id, "rtf")
-                try? data.write(to: url, options: .atomic)
-                keep.insert(url.lastPathComponent)
-            }
-            if let snap = item.pasteboardSnapshot, !snap.isEmpty,
-               let snapData = try? PropertyListSerialization.data(
-                    fromPropertyList: snap, format: .binary, options: 0) {
-                let url = blobURL(item.id, "snap")
-                try? snapData.write(to: url, options: .atomic)
-                keep.insert(url.lastPathComponent)
-            }
-            dtos.append(PersistedItem(
-                id: item.id,
-                kind: item.kind,
-                createdAt: item.createdAt,
-                text: item.text,
-                imageUTType: item.imageUTType,
-                pixelWidth: item.pixelWidth,
-                pixelHeight: item.pixelHeight,
-                filePaths: item.filePaths,
-                hasImageData: item.imageData != nil,
-                hasThumbnail: item.thumbnailData != nil,
-                hasRTF: item.rtfData != nil,
-                pinned: item.pinned,
-                hasSnapshot: hasSnapshot ? true : nil,
-                customLabel: item.customLabel))
-        }
+        let dtos = items.map { persist($0, keep: &keep) }
 
         // Drop orphaned blob files.
         if let existing = try? fm.contentsOfDirectory(at: blobsDir, includingPropertiesForKeys: nil) {
@@ -205,45 +222,103 @@ final class ClipStore: ObservableObject {
         }
     }
 
+    /// Write `item`'s blobs and produce a `PersistedItem` describing them.
+    /// Recurses into `.group` children so each child's snap/thumb/etc.
+    /// land in the same flat `blobs/` directory keyed by their own UUIDs.
+    private func persist(_ item: ClipItem, keep: inout Set<String>) -> PersistedItem {
+        let hasSnapshot = (item.pasteboardSnapshot?.isEmpty == false)
+
+        // Skip the duplicate .full / .rtf blobs when a snapshot exists —
+        // those bytes already live inside the snapshot plist.
+        if !hasSnapshot, let data = item.imageData {
+            let url = blobURL(item.id, "full")
+            try? data.write(to: url, options: .atomic)
+            keep.insert(url.lastPathComponent)
+        }
+        if let data = item.thumbnailData {
+            let url = blobURL(item.id, "thumb")
+            try? data.write(to: url, options: .atomic)
+            keep.insert(url.lastPathComponent)
+        }
+        if !hasSnapshot, let data = item.rtfData {
+            let url = blobURL(item.id, "rtf")
+            try? data.write(to: url, options: .atomic)
+            keep.insert(url.lastPathComponent)
+        }
+        if let snap = item.pasteboardSnapshot, !snap.isEmpty,
+           let snapData = try? PropertyListSerialization.data(
+                fromPropertyList: snap, format: .binary, options: 0) {
+            let url = blobURL(item.id, "snap")
+            try? snapData.write(to: url, options: .atomic)
+            keep.insert(url.lastPathComponent)
+        }
+
+        let childDtos = item.children?.map { persist($0, keep: &keep) }
+
+        return PersistedItem(
+            id: item.id,
+            kind: item.kind,
+            createdAt: item.createdAt,
+            text: item.text,
+            imageUTType: item.imageUTType,
+            pixelWidth: item.pixelWidth,
+            pixelHeight: item.pixelHeight,
+            filePaths: item.filePaths,
+            hasImageData: item.imageData != nil,
+            hasThumbnail: item.thumbnailData != nil,
+            hasRTF: item.rtfData != nil,
+            pinned: item.pinned,
+            hasSnapshot: hasSnapshot ? true : nil,
+            customLabel: item.customLabel,
+            children: childDtos)
+    }
+
     private func load() {
         guard let data = try? Data(contentsOf: historyURL),
               let dtos = try? JSONDecoder().decode([PersistedItem].self, from: data) else {
             return
         }
-        items = dtos.map { dto in
-            // Snapshot is the source of truth when present — image and RTF
-            // bytes live inside it, not in standalone .full / .rtf blobs.
-            // (Clips written by older versions still use the standalone
-            // blobs; we read both paths to handle the upgrade case.)
-            let snapshot: [String: Data]?
-            let imageData: Data?
-            let rtfData: Data?
-            if dto.hasSnapshot == true,
-               let snap = Self.loadSnapshot(id: dto.id, blobsDir: blobsDir) {
-                snapshot = snap
-                imageData = Self.imageDataFromSnapshot(snap, utType: dto.imageUTType)
-                rtfData = snap["public.rtf"]
-            } else {
-                snapshot = nil
-                imageData = dto.hasImageData ? (try? Data(contentsOf: blobURL(dto.id, "full"))) : nil
-                rtfData = dto.hasRTF ? (try? Data(contentsOf: blobURL(dto.id, "rtf"))) : nil
-            }
-            return ClipItem(
-                kind: dto.kind,
-                id: dto.id,
-                createdAt: dto.createdAt,
-                text: dto.text,
-                rtfData: rtfData,
-                imageData: imageData,
-                imageUTType: dto.imageUTType,
-                thumbnailData: dto.hasThumbnail ? (try? Data(contentsOf: blobURL(dto.id, "thumb"))) : nil,
-                pixelWidth: dto.pixelWidth,
-                pixelHeight: dto.pixelHeight,
-                filePaths: dto.filePaths,
-                pasteboardSnapshot: snapshot,
-                pinned: dto.pinned ?? false,
-                customLabel: dto.customLabel)
+        items = dtos.map { rehydrate($0) }
+    }
+
+    /// Rebuild a `ClipItem` from a `PersistedItem` — reads blobs, derives
+    /// preview reps from the snapshot when present, recurses into group
+    /// children.
+    private func rehydrate(_ dto: PersistedItem) -> ClipItem {
+        // Snapshot is the source of truth when present — image and RTF
+        // bytes live inside it, not in standalone .full / .rtf blobs.
+        // (Clips written by older versions still use the standalone
+        // blobs; we read both paths to handle the upgrade case.)
+        let snapshot: [String: Data]?
+        let imageData: Data?
+        let rtfData: Data?
+        if dto.hasSnapshot == true,
+           let snap = Self.loadSnapshot(id: dto.id, blobsDir: blobsDir) {
+            snapshot = snap
+            imageData = Self.imageDataFromSnapshot(snap, utType: dto.imageUTType)
+            rtfData = snap["public.rtf"]
+        } else {
+            snapshot = nil
+            imageData = dto.hasImageData ? (try? Data(contentsOf: blobURL(dto.id, "full"))) : nil
+            rtfData = dto.hasRTF ? (try? Data(contentsOf: blobURL(dto.id, "rtf"))) : nil
         }
+        let children = dto.children?.map { rehydrate($0) }
+        return ClipItem(
+            kind: dto.kind,
+            id: dto.id,
+            createdAt: dto.createdAt,
+            text: dto.text,
+            rtfData: rtfData,
+            imageData: imageData,
+            imageUTType: dto.imageUTType,
+            thumbnailData: dto.hasThumbnail ? (try? Data(contentsOf: blobURL(dto.id, "thumb"))) : nil,
+            pixelWidth: dto.pixelWidth,
+            pixelHeight: dto.pixelHeight,
+            filePaths: dto.filePaths,
+            pasteboardSnapshot: snapshot,
+            children: children,
+            pinned: dto.pinned ?? false,
+            customLabel: dto.customLabel)
     }
 
     /// Pull whatever image rep matches the dto's `imageUTType` from the

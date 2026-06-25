@@ -7,9 +7,11 @@ struct MenuListView: View {
     var onPick: (Int) -> Void
     /// Paste just one file out of a multi-file clip — `(itemIdx, fileIdx)`.
     var onPickFile: (Int, Int) -> Void
-    /// Right-click → Rename on a multi-file row. Sends (itemID, currentLabel)
-    /// up to the StatusItemController which dismisses the popover and shows
-    /// an NSAlert with a text field.
+    /// Paste a single child out of an expanded group — `(groupIdx, childIdx)`.
+    var onPickGroupChild: (Int, Int) -> Void
+    /// Right-click → Rename. Sends (itemID, currentLabel) up to the
+    /// StatusItemController which dismisses the popover and shows an
+    /// NSAlert with a text field.
     var onRename: (UUID, String?) -> Void
     var onClear: () -> Void
     var onExport: () -> Void
@@ -21,8 +23,11 @@ struct MenuListView: View {
     @State private var searchActive: Bool = false
     @State private var searchText: String = ""
     @FocusState private var searchFocused: Bool
-    /// Item ids whose multi-file sub-list is currently expanded.
+    /// Item ids whose multi-file or group sub-list is currently expanded.
     @State private var expandedItems: Set<UUID> = []
+    /// Item id currently being hovered as a drag-drop group target,
+    /// or nil when nothing is being dragged onto a row.
+    @State private var dropTargetID: UUID? = nil
 
     /// (original-store-index, item) pairs after applying the search filter.
     /// Always carries the *unfiltered* index so the badge number stays stable
@@ -109,38 +114,55 @@ struct MenuListView: View {
             VStack(spacing: 0) {
                 ForEach(filteredEntries, id: \.item.id) { entry in
                     let multi = Self.isMultiFile(entry.item)
+                    let isGroup = (entry.item.kind == .group)
+                    let expandable = multi || isGroup
                     let expanded = expandedItems.contains(entry.item.id)
+                    let isDropTarget = (dropTargetID == entry.item.id)
                     VStack(spacing: 0) {
                         ClipRowView(
                             index: entry.idx, item: entry.item,
                             numbered: entry.idx < 9,
                             onTogglePin: { store.togglePin(id: entry.item.id) },
                             isExpanded: expanded,
-                            onToggleExpand: multi ? { toggleExpand(entry.item.id) } : nil,
+                            onToggleExpand: expandable ? { toggleExpand(entry.item.id) } : nil,
                             onPick: { onPick(entry.idx) })
-                            .background(hoverIndex == entry.idx
-                                        ? Color.accentColor.opacity(0.15)
-                                        : (entry.item.pinned ? Color.accentColor.opacity(0.08) : Color.clear))
+                            .background(rowBackground(entry: entry, isDropTarget: isDropTarget))
                             .onHover { inside in
                                 hoverIndex = inside ? entry.idx : (hoverIndex == entry.idx ? nil : hoverIndex)
                             }
-                            .contextMenu {
-                                if multi {
-                                    Button(entry.item.customLabel == nil ? "Rename…" : "Edit name…") {
-                                        onRename(entry.item.id, entry.item.customLabel)
-                                    }
-                                    if entry.item.customLabel != nil {
-                                        Button("Clear custom name") {
-                                            onRename(entry.item.id, nil)
-                                        }
-                                    }
-                                }
+                            .contextMenu { rowContextMenu(entry.item) }
+                            // Drop target: when another clipandcue row is
+                            // dragged onto this one, merge them into a group
+                            // (or append to the existing group).
+                            .onDrop(of: [ClipItem.clipIDUTI],
+                                    isTargeted: Binding(
+                                        get: { dropTargetID == entry.item.id },
+                                        set: { active in
+                                            if active {
+                                                dropTargetID = entry.item.id
+                                            } else if dropTargetID == entry.item.id {
+                                                dropTargetID = nil
+                                            }
+                                        })) { providers in
+                                handleGroupDrop(providers: providers, ontoTargetID: entry.item.id)
                             }
 
                         if multi && expanded, let paths = entry.item.filePaths {
                             VStack(spacing: 0) {
                                 ForEach(Array(paths.enumerated()), id: \.offset) { (fi, path) in
                                     FileSubRowView(path: path) { onPickFile(entry.idx, fi) }
+                                }
+                            }
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.06))
+                        }
+
+                        if isGroup && expanded, let kids = entry.item.children {
+                            VStack(spacing: 0) {
+                                ForEach(Array(kids.enumerated()), id: \.element.id) { (ci, child) in
+                                    GroupChildRowView(child: child) {
+                                        onPickGroupChild(entry.idx, ci)
+                                    }
                                 }
                             }
                             .padding(.vertical, 2)
@@ -153,6 +175,45 @@ struct MenuListView: View {
             .padding(.bottom, 8)
         }
         .frame(maxHeight: 368)
+    }
+
+    @ViewBuilder
+    private func rowContextMenu(_ item: ClipItem) -> some View {
+        let multi = Self.isMultiFile(item)
+        let isGroup = item.kind == .group
+        if multi || isGroup {
+            Button(item.customLabel == nil ? "Rename…" : "Edit name…") {
+                onRename(item.id, item.customLabel)
+            }
+            if item.customLabel != nil {
+                Button("Clear custom name") { onRename(item.id, nil) }
+            }
+        }
+        if isGroup {
+            Divider()
+            Button("Ungroup") { store.ungroupItem(id: item.id) }
+        }
+    }
+
+    private func rowBackground(entry: (idx: Int, item: ClipItem), isDropTarget: Bool) -> Color {
+        if isDropTarget { return Color.accentColor.opacity(0.35) }
+        if hoverIndex == entry.idx { return Color.accentColor.opacity(0.15) }
+        if entry.item.pinned { return Color.accentColor.opacity(0.08) }
+        return Color.clear
+    }
+
+    private func handleGroupDrop(providers: [NSItemProvider], ontoTargetID: UUID) -> Bool {
+        guard let provider = providers.first else { return false }
+        provider.loadDataRepresentation(forTypeIdentifier: ClipItem.clipIDUTI) { data, _ in
+            guard let data,
+                  let uuidString = String(data: data, encoding: .utf8),
+                  let droppedID = UUID(uuidString: uuidString) else { return }
+            DispatchQueue.main.async {
+                store.groupItems(droppedID: droppedID, ontoTargetID: ontoTargetID)
+                dropTargetID = nil
+            }
+        }
+        return true
     }
 
     private static func isMultiFile(_ item: ClipItem) -> Bool {
@@ -231,6 +292,60 @@ struct MenuListView: View {
         searchActive = false
         searchText = ""
         searchFocused = false
+    }
+}
+
+/// One row inside an expanded `.group` clip — a compact ClipItem preview
+/// that fits the same indentation/affordance language as `FileSubRowView`.
+/// Click pastes just this child via the parent `MenuListView`'s
+/// `onPickGroupChild` callback; press + drag drops the child's primary
+/// representation into any other app.
+private struct GroupChildRowView: View {
+    let child: ClipItem
+    let onPick: () -> Void
+
+    @State private var hovered = false
+
+    private var thumbnail: NSImage? { child.thumbnailImage }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Group {
+                if let thumb = thumbnail {
+                    Image(nsImage: thumb)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                } else {
+                    Image(systemName: child.symbolName)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: 20)
+                }
+            }
+            .frame(width: 20, height: 20)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(child.displayPrimary)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundStyle(.primary.opacity(0.88))
+                Text(child.displaySecondary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.leading, 44)
+        .padding(.trailing, 12)
+        .padding(.vertical, 4)
+        .background(hovered ? Color.accentColor.opacity(0.18) : Color.clear)
+        .contentShape(Rectangle())
+        .onHover { hovered = $0 }
+        .onTapGesture(perform: onPick)
+        .onDrag { child.dragProvider() }
+        .help("Paste \(child.displayPrimary)")
     }
 }
 

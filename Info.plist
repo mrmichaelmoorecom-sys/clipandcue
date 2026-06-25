@@ -26,5 +26,20 @@
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
     <string>clipandcue — freeware clipboard history utility.</string>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.clipandcue.clip-id</string>
+            <key>UTTypeDescription</key>
+            <string>clipandcue clip reference</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
+    </array>
 </dict>
 </plist>

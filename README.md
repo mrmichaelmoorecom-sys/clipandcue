@@ -113,8 +113,8 @@ By default (as of v0.2.4):
 
 - **Sync with my other devices** is **off**. Nothing leaves your Mac unless you
   turn it on. When you do enable it, text and image clips sync through your
-  private iCloud database to any other Mac you sign in with clipandcue and to
-  the companion iPhone app. File clips never sync.
+  private iCloud database to any other Mac you sign in with clipandcue. File
+  clips never sync.
 - **Ignore items from password managers** is **on**. Clipboard copies that
   password managers mark as concealed/transient are skipped — they aren't
   stored on disk and never enter the sync pipeline.

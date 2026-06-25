@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
         sc.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
+        sc.onPickGroupChild = { [weak self] idx, childIdx in self?.pasteGroupChild(groupIndex: idx, childIndex: childIdx) }
         sc.onPreferences = { [weak self] in self?.openPreferences() }
         sc.onHowTo = { [weak self] in self?.openHowTo() }
         sc.onExport = { [weak self] in
@@ -35,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let qp = QuickPasteController(store: store)
         qp.onPick = { [weak self] idx in self?.paste(index: idx) }
         qp.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
+        qp.onPickGroupChild = { [weak self] idx, childIdx in self?.pasteGroupChild(groupIndex: idx, childIndex: childIdx) }
         quickPaste = qp
 
         let hk = GlobalHotkey()
@@ -137,6 +139,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
               paths.indices.contains(fileIndex) else { return }
         let single = ClipItem(kind: .files, filePaths: [paths[fileIndex]])
         Paster.shared.deliver(single, autoPaste: settings.autoPaste)
+    }
+
+    /// Paste a single child out of an expanded group, via its index pair.
+    private func pasteGroupChild(groupIndex: Int, childIndex: Int) {
+        guard let group = store.item(at: groupIndex),
+              group.kind == .group,
+              let kids = group.children,
+              kids.indices.contains(childIndex) else { return }
+        Paster.shared.deliver(kids[childIndex], autoPaste: settings.autoPaste)
     }
 
     private func openPreferences() {

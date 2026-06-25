@@ -91,6 +91,10 @@ enum Exporter {
                                                   attributes: [.font: bodyFont,
                                                                .foregroundColor: mutedColor]))
                 }
+            case .group:
+                out.append(NSAttributedString(string: "[\(item.displayPrimary)]",
+                                              attributes: [.font: bodyFont,
+                                                           .foregroundColor: mutedColor]))
             }
             out.append(NSAttributedString(string: "\n\n"))
         }
@@ -144,6 +148,8 @@ enum Exporter {
                 lines.append("\(n). \(names)")
             case .image:
                 imageCount += 1
+                lines.append("\(n). [\(item.displayPrimary)]")
+            case .group:
                 lines.append("\(n). [\(item.displayPrimary)]")
             }
         }

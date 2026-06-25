@@ -13,6 +13,9 @@ final class QuickPasteController: NSObject, NSWindowDelegate {
     /// Paste a single file from an expanded multi-file clip.
     /// `(itemIndex, fileIndex)` resolves against the store.
     var onPickFile: ((Int, Int) -> Void)?
+    /// Paste a single child from an expanded group clip.
+    /// `(groupIndex, childIndex)` resolves against the store.
+    var onPickGroupChild: ((Int, Int) -> Void)?
 
     private let store: ClipStore
     private let model = QuickPasteModel()
@@ -38,6 +41,10 @@ final class QuickPasteController: NSObject, NSWindowDelegate {
                                     onPickFile: { [weak self] idx, fi in
                                         self?.hide()
                                         self?.onPickFile?(idx, fi)
+                                    },
+                                    onPickGroupChild: { [weak self] idx, ci in
+                                        self?.hide()
+                                        self?.onPickGroupChild?(idx, ci)
                                     })
         let host = NSHostingView(rootView: hud)
         host.layoutSubtreeIfNeeded()

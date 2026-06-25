@@ -136,6 +136,8 @@ final class MacCloudKitSync {
             record["image"] = CKAsset(fileURL: tmp)
         case .files:
             return nil  // not synced to the text-and-image iOS app
+        case .group:
+            return nil  // user-assembled stacks are local-only
         }
         return record
     }

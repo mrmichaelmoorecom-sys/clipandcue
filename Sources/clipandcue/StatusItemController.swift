@@ -11,6 +11,9 @@ final class StatusItemController: NSObject {
     /// Paste a single file from an expanded multi-file clip.
     /// `(itemIndex, fileIndex)` resolves against the store.
     var onPickFile: ((Int, Int) -> Void)?
+    /// Paste a single child from an expanded group clip.
+    /// `(groupIndex, childIndex)` resolves against the store.
+    var onPickGroupChild: ((Int, Int) -> Void)?
     var onPreferences: (() -> Void)?
     var onHowTo: (() -> Void)?
     var onExport: (() -> Void)?
@@ -92,6 +95,10 @@ final class StatusItemController: NSObject {
             onPickFile: { [weak self] idx, fi in
                 self?.closePopover()
                 self?.onPickFile?(idx, fi)
+            },
+            onPickGroupChild: { [weak self] idx, ci in
+                self?.closePopover()
+                self?.onPickGroupChild?(idx, ci)
             },
             onRename: { [weak self] id, current in
                 self?.closePopover()

@@ -33,6 +33,16 @@ final class Paster {
     /// Place `item` on the clipboard; if `autoPaste` and Accessibility is granted,
     /// reactivate the previous app and synthesize ⌘V.
     func deliver(_ item: ClipItem, autoPaste: Bool) {
+        // User-assembled stack: paste every child sequentially. Each child
+        // is delivered via the same writeToPasteboard path (snapshot when
+        // present, per-kind otherwise) — so a group can mix text, images,
+        // files, design-app copies and they all paste back at full
+        // fidelity in order.
+        if item.kind == .group, let kids = item.children, !kids.isEmpty {
+            deliverGroup(kids, autoPaste: autoPaste)
+            return
+        }
+
         writeToPasteboard(item)
         guard autoPaste else { return }
         guard hasAccessibility else {
@@ -51,6 +61,28 @@ final class Paster {
             sendMultiFilePaste(paths)
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+                self?.sendCommandV()
+            }
+        }
+    }
+
+    private func deliverGroup(_ children: [ClipItem], autoPaste: Bool) {
+        // Put the first child on the pasteboard right away so the user
+        // gets something usable from a manual ⌘V even without Accessibility.
+        if let first = children.first { writeToPasteboard(first) }
+        guard autoPaste else { return }
+        guard hasAccessibility else {
+            requestAccessibility()
+            return
+        }
+        targetApp?.activate(options: [.activateIgnoringOtherApps])
+
+        let leadIn: TimeInterval = 0.18
+        let step: TimeInterval = 0.50
+        for (i, child) in children.enumerated() {
+            let delay = leadIn + Double(i) * step
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.writeToPasteboard(child)
                 self?.sendCommandV()
             }
         }
@@ -156,6 +188,13 @@ final class Paster {
                     let urls = paths.map { URL(fileURLWithPath: $0) as NSURL }
                     pb.writeObjects(urls)
                 }
+            }
+        case .group:
+            // Manual fallback: put the first child on the pasteboard.
+            // (Real group paste is handled in `deliver` via sequential ⌘V
+            // through this same per-kind path for each child.)
+            if let first = item.children?.first {
+                writeToPasteboard(first)
             }
         }
     }

@@ -13,8 +13,10 @@ struct QuickPasteHUDView: View {
     var onPick: (Int) -> Void
     /// Paste a single file out of a multi-file clip — `(itemIdx, fileIdx)`.
     var onPickFile: (Int, Int) -> Void
+    /// Paste a single child out of an expanded group — `(groupIdx, childIdx)`.
+    var onPickGroupChild: (Int, Int) -> Void
 
-    /// Item ids whose multi-file sub-list is currently expanded.
+    /// Item ids whose multi-file or group sub-list is currently expanded.
     @State private var expandedItems: Set<UUID> = []
 
     var body: some View {
@@ -28,12 +30,14 @@ struct QuickPasteHUDView: View {
                         VStack(spacing: 3) {
                             ForEach(Array(store.items.enumerated()), id: \.element.id) { idx, item in
                                 let multi = Self.isMultiFile(item)
+                                let isGroup = item.kind == .group
+                                let expandable = multi || isGroup
                                 let expanded = expandedItems.contains(item.id)
                                 VStack(spacing: 0) {
                                     ClipRowView(index: idx, item: item, large: true,
                                                 numbered: idx < 9,
                                                 isExpanded: expanded,
-                                                onToggleExpand: multi ? { toggleExpand(item.id) } : nil,
+                                                onToggleExpand: expandable ? { toggleExpand(item.id) } : nil,
                                                 onPick: { onPick(idx) })
                                         .id(idx)
                                         .background(
@@ -49,6 +53,22 @@ struct QuickPasteHUDView: View {
                                             ForEach(Array(paths.enumerated()), id: \.offset) { (fi, path) in
                                                 FileSubRowView(path: path, large: true) {
                                                     onPickFile(idx, fi)
+                                                }
+                                            }
+                                        }
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                                .fill(Color.white.opacity(0.06))
+                                        )
+                                        .padding(.top, 2)
+                                    }
+
+                                    if isGroup && expanded, let kids = item.children {
+                                        VStack(spacing: 0) {
+                                            ForEach(Array(kids.enumerated()), id: \.element.id) { (ci, child) in
+                                                HUDGroupChildRowView(child: child) {
+                                                    onPickGroupChild(idx, ci)
                                                 }
                                             }
                                         }
@@ -121,5 +141,57 @@ struct QuickPasteHUDView: View {
         } else {
             expandedItems.insert(id)
         }
+    }
+}
+
+/// One child row inside an expanded `.group` clip rendered in the HUD —
+/// larger thumbnail / typography to fit the surrounding row scale. Click
+/// pastes just this child; press + drag drops its primary representation.
+private struct HUDGroupChildRowView: View {
+    let child: ClipItem
+    let onPick: () -> Void
+
+    @State private var hovered = false
+
+    private var thumbnail: NSImage? { child.thumbnailImage }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Group {
+                if let thumb = thumbnail {
+                    Image(nsImage: thumb)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                } else {
+                    Image(systemName: child.symbolName)
+                        .font(.system(size: 18))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 36, height: 36)
+                }
+            }
+            .frame(width: 36, height: 36)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(child.displayPrimary)
+                    .font(.callout)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundStyle(.primary.opacity(0.92))
+                Text(child.displaySecondary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.leading, 64)
+        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+        .background(hovered ? Color.accentColor.opacity(0.18) : Color.clear)
+        .contentShape(Rectangle())
+        .onHover { hovered = $0 }
+        .onTapGesture(perform: onPick)
+        .onDrag { child.dragProvider() }
+        .help("Paste \(child.displayPrimary)")
     }
 }
