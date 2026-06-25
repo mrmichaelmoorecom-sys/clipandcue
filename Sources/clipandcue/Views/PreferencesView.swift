@@ -9,6 +9,7 @@ struct PreferencesView: View {
 
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var accessibilityGranted = Paster.shared.hasAccessibility
+    @StateObject private var updater = UpdateChecker()
 
     private var version: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -78,6 +79,7 @@ struct PreferencesView: View {
                     Spacer()
                 }
                 Button("How clip and cue works…") { onHowTo() }
+                updateRow
                 HStack(spacing: 18) {
                     linkButton("Website", "https://clipandcue.com")
                     linkButton("GitHub", "https://github.com/mrmichaelmoorecom-sys/clipandcue")
@@ -95,6 +97,47 @@ struct PreferencesView: View {
         Button(title) { if let url = URL(string: urlString) { NSWorkspace.shared.open(url) } }
             .buttonStyle(.link)
             .font(.caption)
+    }
+
+    /// "Check for updates" row in About — shows status next to the button
+    /// and morphs into a "Download v0.2.x" link when a new release exists.
+    @ViewBuilder
+    private var updateRow: some View {
+        HStack(spacing: 10) {
+            switch updater.state {
+            case .idle:
+                Button("Check for updates") {
+                    Task { await updater.check() }
+                }
+            case .checking:
+                Button("Checking…") {}
+                    .disabled(true)
+                ProgressView().controlSize(.small)
+            case .upToDate:
+                Button("Check for updates") {
+                    Task { await updater.check() }
+                }
+                Text("You're on the latest version.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            case .updateAvailable(let latest, let url):
+                Button("Download v\(latest)") {
+                    NSWorkspace.shared.open(url)
+                }
+                .buttonStyle(.borderedProminent)
+                Text("New version available.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            case .failed:
+                Button("Check for updates") {
+                    Task { await updater.check() }
+                }
+                Text("Couldn't reach GitHub.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
     }
 
     private func openAccessibilitySettings() {
