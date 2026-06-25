@@ -1,12 +1,10 @@
 import SwiftUI
 import AppKit
 import Carbon.HIToolbox
-import Sparkle
 
 struct PreferencesView: View {
     @ObservedObject var settings = AppSettings.shared
     let store: ClipStore
-    let updater: SPUUpdater
     var onHowTo: () -> Void = {}
 
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
@@ -100,16 +98,18 @@ struct PreferencesView: View {
             .font(.caption)
     }
 
-    /// "Check for updates" row in About — drives Sparkle's verify-and-swap
-    /// flow. Sparkle owns the modal that follows (release notes, download
-    /// progress, relaunch prompt), so we only need a button to kick it off.
+    /// "Check for updates" row in About — opens the latest GitHub release
+    /// page in the browser. Once we're on the Mac App Store, that channel
+    /// handles update prompts automatically; this button stays useful for
+    /// users who got the app via direct download.
     @ViewBuilder
     private var updateRow: some View {
         HStack(spacing: 10) {
             Button("Check for updates…") {
-                updater.checkForUpdates()
+                if let url = URL(string: "https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest") {
+                    NSWorkspace.shared.open(url)
+                }
             }
-            .disabled(!updater.canCheckForUpdates)
             Spacer()
         }
     }

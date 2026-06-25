@@ -13,9 +13,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.8</string>
+    <string>0.2.9</string>
     <key>CFBundleVersion</key>
-    <string>19</string>
+    <string>20</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
@@ -26,15 +26,6 @@
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
     <string>clipandcue — freeware clipboard history utility.</string>
-    <!-- Sparkle auto-updater (manual checks only per user pref). -->
-    <key>SUFeedURL</key>
-    <string>https://clipandcue.com/appcast.xml</string>
-    <key>SUPublicEDKey</key>
-    <string>jOsZFAncZzyIDm201Uvs/1nfoZdkq4URTz17uBcub8Q=</string>
-    <key>SUEnableAutomaticChecks</key>
-    <false/>
-    <key>SUEnableInstallerLauncherService</key>
-    <false/>
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>

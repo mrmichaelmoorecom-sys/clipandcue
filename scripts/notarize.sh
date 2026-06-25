@@ -41,17 +41,4 @@ xcrun stapler staple "$DMG"
 echo "==> verify"
 xcrun stapler validate "$DMG"
 spctl --assess --type open --context context:primary-signature -v "$DMG" || true
-
-# Sparkle EdDSA signature for the auto-updater.
-SIGN_UPDATE="$(pwd)/.build/artifacts/sparkle/Sparkle/bin/sign_update"
-if [[ -x "$SIGN_UPDATE" ]]; then
-    echo "==> sign_update (Sparkle EdDSA signature for appcast)"
-    SPARKLE_LINE=$("$SIGN_UPDATE" "$DMG")
-    echo "    $SPARKLE_LINE"
-    # Write to a known location so the release script can pick it up.
-    echo "$SPARKLE_LINE" > "$(pwd)/.build/last-sparkle-signature.txt"
-else
-    echo "WARN: $SIGN_UPDATE not found — appcast won't be signable."
-fi
-
 echo "==> done: notarized $DMG"
