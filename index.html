@@ -754,7 +754,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
            Download for macOS
         </a>
       </div>
-      <p class="dlmeta">v0.2.6 &middot; released June 24, 2026</p>
+      <p class="dlmeta" id="dlmeta">v0.2.6 &middot; released June 24, 2026</p>
       <p class="dlnote" id="dlnote">Tick the box to enable the download.</p>
     </div>
   </div>
@@ -787,6 +787,27 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 <script>
 (function(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* live version + release date from GitHub Releases API.
+     Fires immediately; the hardcoded fallback in #dlmeta stays visible
+     if the request fails (rate-limited, offline, JS-disabled). */
+  (function(){
+    var el = document.getElementById('dlmeta');
+    if(!el || !window.fetch) return;
+    fetch('https://api.github.com/repos/mrmichaelmoorecom-sys/clipandcue/releases/latest',
+          {headers: {'Accept':'application/vnd.github+json'}})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(rel){
+        if(!rel || !rel.tag_name) return;
+        var tag = rel.tag_name;
+        var when = rel.published_at ? new Date(rel.published_at) : null;
+        var dateStr = when && !isNaN(when) ? when.toLocaleDateString('en-US', {
+          year:'numeric', month:'long', day:'numeric'
+        }) : '';
+        el.textContent = dateStr ? (tag + ' · released ' + dateStr) : tag;
+      })
+      .catch(function(){ /* leave fallback */ });
+  })();
 
   /* scroll progress + nav */
   var nav = document.getElementById('nav'), prog = document.getElementById('progress'), pb = document.getElementById('poweredby');
