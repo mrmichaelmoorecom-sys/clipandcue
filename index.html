@@ -698,8 +698,9 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
 
     <div class="callout reveal">
       <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> An honest privacy note</h4>
-      <p>Your history stays on your Mac. clip and cue stores it <strong>unencrypted on disk</strong> at <code>~/Library/Application Support/clipandcue/</code> — nothing leaves your computer by default. Items password managers mark as concealed are ignored. Hit <strong>Clear</strong> any time to wipe it. Copies above your size cap (default 20&nbsp;MB) aren't saved — you'll get an icon flash instead.</p>
-      <p style="margin-top:.5em">If you want clips to follow you, flip on <strong>Sync with my other devices</strong> in Preferences — text and image clips will travel through your private iCloud database to any other Mac you sign in with clip and cue. File clips never sync.</p>
+      <p>Your history stays on your Mac. clip and cue stores it <strong>unencrypted on disk</strong> at <code>~/Library/Application Support/clipandcue/</code> — nothing leaves your computer by default. Items password managers mark as concealed are ignored (you can toggle that off in Preferences if you want a full clipboard log). Hit <strong>Clear</strong> any time to wipe it.</p>
+      <p style="margin-top:.5em">What gets captured: every representation the source app put on the pasteboard, so a Keynote shape pasted back into Keynote returns as an <em>editable</em> object, not a flattened image. Vector and app-native types get four times the per-item cap to make sure they fit. Anything over the cap isn't saved — you'll get an icon flash and a notification with a one-click <strong>Open Preferences</strong> button to raise it. Default cap is 50&nbsp;MB.</p>
+      <p style="margin-top:.5em">If you want clips to follow you, flip on <strong>Sync with my other devices</strong> in Preferences — text and image clips will travel through your private iCloud database to any other Mac you sign in with clip and cue. File clips and grouped stacks stay local.</p>
     </div>
   </div>
 </section>
