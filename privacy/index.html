@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — clip and cue</title>
+<meta name="description" content="What clip and cue collects, where it lives, and what your options are.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#d49aa9; --rose-deep:#a25768;
+  --ink:#2e2a2b; --ink-soft:#6a5f63; --cream:#fffdfc; --line:rgba(46,42,43,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--cream)}
+body{font-family:'Outfit',-apple-system,system-ui,sans-serif;color:var(--ink);background:linear-gradient(125deg,#fffdfc 0%,#f7ecef 45%,#fbf3f5 60%,#fffdfc 100%);line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--rose-deep);text-decoration:none;border-bottom:1px solid rgba(162,87,104,.25)}
+a:hover{border-bottom-color:var(--rose-deep)}
+.wrap{max-width:680px;margin:0 auto;padding:80px 24px 100px}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-style:italic}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);margin-bottom:48px;border-bottom:none}
+.back:hover{color:var(--ink)}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--rose-deep);font-weight:600;margin-bottom:14px}
+h1{font-size:clamp(36px,5vw,52px);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-bottom:10px}
+h1 .serif{font-weight:400;color:var(--rose-deep)}
+.lede{font-size:18px;color:var(--ink-soft);margin-bottom:40px}
+h2{font-size:22px;font-weight:600;margin-top:44px;margin-bottom:14px;letter-spacing:-.01em}
+h3{font-size:16px;font-weight:600;margin-top:24px;margin-bottom:8px}
+p{margin-bottom:14px;color:var(--ink)}
+ul{margin:8px 0 18px 22px}
+li{margin-bottom:8px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;background:rgba(162,87,104,.08);padding:2px 6px;border-radius:4px}
+.meta{margin-top:60px;padding-top:28px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft)}
+.callout{margin:28px 0;padding:18px 22px;background:rgba(255,253,252,.7);border:1px solid var(--line);border-radius:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="/">← clip and cue</a>
+
+<div class="eyebrow">Privacy</div>
+<h1>An <span class="serif">honest</span> privacy policy.</h1>
+<p class="lede">This is the whole thing. No third-party trackers, no analytics SDKs, no ads, no accounts. clip and cue runs on your Mac and stays on your Mac unless you turn on iCloud sync.</p>
+
+<h2>What clip and cue reads</h2>
+<p>clip and cue is a clipboard manager. To do its job, it watches the system pasteboard and remembers your recent copies — text, images, file references, and any other representations the source app puts on the pasteboard. That's the entire data-collection surface.</p>
+
+<h3>What's ignored on purpose</h3>
+<ul>
+  <li><strong>Password-manager copies.</strong> Items 1Password, Keychain, your browser's password manager, and similar tools mark as <em>concealed</em> or <em>transient</em> are skipped by default. They never enter the history.</li>
+  <li><strong>Copies that exceed your size cap.</strong> Anything above your Preferences size cap (default 50&nbsp;MB per representation) isn't stored — you get an icon flash and a notification instead.</li>
+</ul>
+
+<h2>Where it lives</h2>
+<p>By default, your history is stored <strong>locally only</strong>, in the app's sandbox container at <code>~/Library/Containers/com.clipandcue.app/Data/</code>. The contents are stored unencrypted at rest under your user account. clip and cue never sends them anywhere.</p>
+
+<div class="callout">
+<strong>Optional iCloud sync.</strong> If you turn on <em>Sync with my other devices</em> in Preferences, text and image clips travel through <em>your own</em> private iCloud database (the one tied to your Apple ID) so they appear on your other Macs running clip and cue. Apple, not the developer, operates that database. File clips and user-built stacks never sync. The developer cannot read your iCloud database.
+</div>
+
+<h2>What's NOT collected</h2>
+<p>clip and cue does <strong>not</strong> collect, transmit, or store any of the following — anywhere, ever:</p>
+<ul>
+  <li>Your name, email, Apple ID, or any account information</li>
+  <li>Device identifiers, IP addresses, or hardware fingerprints</li>
+  <li>Crash reports, telemetry, or analytics of any kind</li>
+  <li>Location, contacts, photos library, browsing history, search history</li>
+  <li>Anything for advertising, marketing, or third-party use</li>
+</ul>
+<p>There are no third-party SDKs in the app. There is no developer-side server. Whatever you copy is yours, and it stays in your sandbox container (and, only if you opt in, in your private iCloud database).</p>
+
+<h2>How to delete everything</h2>
+<ul>
+  <li><strong>Clear individual clips</strong> by quitting / re-launching with <em>Clear history when I quit</em> on, or by hitting <em>Clear</em> in the menu any time.</li>
+  <li><strong>Wipe the local store</strong> by deleting <code>~/Library/Containers/com.clipandcue.app/</code>.</li>
+  <li><strong>Wipe iCloud-synced clips</strong> by tapping <em>Clear</em> with sync on, or by signing out of iCloud entirely. Apple's CloudKit handles the actual deletion.</li>
+  <li><strong>Uninstall the app</strong> by dragging it to the Trash. The sandbox container goes with it.</li>
+</ul>
+
+<h2>Children's privacy</h2>
+<p>clip and cue is not directed at children under 13 and does not knowingly collect any data from children under 13. Since the app collects no personal information, no identifiers, and contacts no developer-side server, there is no data for any user to be specifically associated with.</p>
+
+<h2>Changes to this policy</h2>
+<p>If we change anything material about how clip and cue handles data, we'll update this page and the <em>Privacy</em> section in the in-app How To. Both surfaces should always say the same thing.</p>
+
+<h2>Contact</h2>
+<p>Questions, complaints, or anything else: <a href="mailto:mike@toyrobotmedia.com">mike@toyrobotmedia.com</a>.</p>
+
+<div class="meta">
+Last updated: June 25, 2026 · clip and cue is freeware released under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>.
+</div>
+
+</div>
+</body>
+</html>
