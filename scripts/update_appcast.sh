@@ -22,6 +22,12 @@ if [[ ! -f "$SIG_FILE" ]]; then
 fi
 SPARKLE_LINE="$(cat "$SIG_FILE")"
 
+# Sparkle compares the user's installed CFBundleVersion against the
+# appcast's <sparkle:version> as a numeric build number — NOT the
+# user-visible CFBundleShortVersionString. Pull the build number out of
+# Info.plist so we're always comparing the same axis.
+BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' Info.plist)"
+
 PUBDATE="$(LC_ALL=C date -u +'%a, %d %b %Y %H:%M:%S +0000')"
 URL="https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/download/v${VERSION}/clipandcue.dmg"
 
@@ -29,7 +35,7 @@ NEW_ITEM=$(cat <<EOF
         <item>
             <title>v${VERSION}</title>
             <pubDate>${PUBDATE}</pubDate>
-            <sparkle:version>${VERSION}</sparkle:version>
+            <sparkle:version>${BUILD}</sparkle:version>
             <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
             <description><![CDATA[${NOTES}]]></description>
