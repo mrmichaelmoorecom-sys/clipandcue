@@ -2,8 +2,15 @@ import AppKit
 import Combine
 import SwiftUI
 import UserNotifications
+import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    /// Sparkle controller — manual-only checks (`startingUpdater: true` so the
+    /// updater is alive and ready, but no scheduled polling because the
+    /// SUEnableAutomaticChecks key in Info.plist is false). Preferences calls
+    /// `checkForUpdates(_:)` to drive the verify-and-swap flow.
+    let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     let store = ClipStore()
     private let settings = AppSettings.shared
     private var monitor: ClipboardMonitor!
@@ -152,7 +159,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     private func openPreferences() {
         if prefsWindow == nil {
-            let root = PreferencesView(store: store, onHowTo: { [weak self] in self?.openHowTo() })
+            let root = PreferencesView(store: store,
+                                       updater: updaterController.updater,
+                                       onHowTo: { [weak self] in self?.openHowTo() })
             let host = NSHostingController(rootView: root)
             host.sizingOptions = [.preferredContentSize]
             let win = NSWindow(contentViewController: host)

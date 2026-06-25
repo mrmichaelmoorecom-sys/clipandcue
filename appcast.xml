@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>clipandcue</title>
+        <link>https://clipandcue.com/appcast.xml</link>
+        <description>Auto-update feed for clipandcue.</description>
+        <language>en</language>
+        <item>
+            <title>v0.2.8</title>
+            <pubDate>Thu, 25 Jun 2026 03:17:20 +0000</pubDate>
+            <sparkle:version>0.2.8</sparkle:version>
+            <sparkle:shortVersionString>0.2.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[Auto-updates are here. Click Check for updates in Preferences and clip and cue downloads, verifies, and installs the new version — no browser detour.]]></description>
+            <enclosure
+                url="https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/download/v0.2.8/clipandcue.dmg"
+                type="application/octet-stream"
+                sparkle:edSignature="+pUI8noW7FUNCaXk9LxNxA1UCWERLCTd6je9Bt1hFEOLLUDZEywBRELHk0tq1USoQsPq3Hm/UMmLigpSV6IdCg==" length="3096693" />
+        </item>
+    </channel>
+</rss>

@@ -1,15 +1,16 @@
 import SwiftUI
 import AppKit
 import Carbon.HIToolbox
+import Sparkle
 
 struct PreferencesView: View {
     @ObservedObject var settings = AppSettings.shared
     let store: ClipStore
+    let updater: SPUUpdater
     var onHowTo: () -> Void = {}
 
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var accessibilityGranted = Paster.shared.hasAccessibility
-    @StateObject private var updater = UpdateChecker()
 
     private var version: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -99,43 +100,16 @@ struct PreferencesView: View {
             .font(.caption)
     }
 
-    /// "Check for updates" row in About — shows status next to the button
-    /// and morphs into a "Download v0.2.x" link when a new release exists.
+    /// "Check for updates" row in About — drives Sparkle's verify-and-swap
+    /// flow. Sparkle owns the modal that follows (release notes, download
+    /// progress, relaunch prompt), so we only need a button to kick it off.
     @ViewBuilder
     private var updateRow: some View {
         HStack(spacing: 10) {
-            switch updater.state {
-            case .idle:
-                Button("Check for updates") {
-                    Task { await updater.check() }
-                }
-            case .checking:
-                Button("Checking…") {}
-                    .disabled(true)
-                ProgressView().controlSize(.small)
-            case .upToDate:
-                Button("Check for updates") {
-                    Task { await updater.check() }
-                }
-                Text("You're on the latest version.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            case .updateAvailable(let latest, let url):
-                Button("Download v\(latest)") {
-                    NSWorkspace.shared.open(url)
-                }
-                .buttonStyle(.borderedProminent)
-                Text("New version available.")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            case .failed:
-                Button("Check for updates") {
-                    Task { await updater.check() }
-                }
-                Text("Couldn't reach GitHub.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Button("Check for updates…") {
+                updater.checkForUpdates()
             }
+            .disabled(!updater.canCheckForUpdates)
             Spacer()
         }
     }
