@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Mac App Store ingestion requires app sandbox. Direct-download builds
+         (signed with Developer ID) use the non-sandboxed entitlements.plist
+         alongside this file. -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- Outbound network for CloudKit sync. Never act as a server. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Allow reading files the user explicitly hands to the app —
+         pasteboard file copies, drag-in. Granted implicitly by powerbox
+         when the user selects the content. -->
+    <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+
+    <!-- Required by macOS when an embedded provisioning profile is present.
+         Must match the App Store provisioning profile's app identifier. -->
+    <key>com.apple.application-identifier</key>
+    <string>HA5AB7JS87.com.clipandcue.app</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>HA5AB7JS87</string>
+
+    <!-- CloudKit sync — shared private-database container. -->
+    <key>com.apple.developer.icloud-container-identifiers</key>
+    <array>
+        <string>iCloud.com.clipandcue.shared</string>
+    </array>
+    <key>com.apple.developer.icloud-services</key>
+    <array>
+        <string>CloudKit</string>
+    </array>
+    <!-- App Store ingestion requires this to be an explicit
+         'Production' or 'Development' string. An empty value trips
+         Transporter's 409 validation. -->
+    <key>com.apple.developer.icloud-container-environment</key>
+    <string>Production</string>
+
+    <!-- Silent CloudKit push for live cross-device sync. macOS uses the
+         `com.apple.developer-` prefix; the bare `aps-environment` key is
+         iOS-only. -->
+    <key>com.apple.developer.aps-environment</key>
+    <string>production</string>
+</dict>
+</plist>

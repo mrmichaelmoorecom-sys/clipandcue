@@ -4,8 +4,8 @@ import AppKit
 /// A short usage guide opened from the menu's "How to" button. Split into
 /// two segmented tabs — the **Basics** tab covers the everyday flow
 /// (copy, menu, hotkey, pin, accessibility, privacy) and the **Advanced**
-/// tab covers the power-user features (drag-out, multi-file stacks,
-/// user-built stacks) plus the contact line.
+/// tab covers the power-user features (multi-file stacks, user-built
+/// stacks) plus the contact line.
 struct HowToView: View {
     @State private var tab: Tab = .basics
 
@@ -89,20 +89,10 @@ struct HowToView: View {
 
     @ViewBuilder
     private var advanced: some View {
-        stepCard(symbol: "hand.draw", title: "Drag clips into any app") {
-            Text("Press and hold a row in the menu or the ") + kbd("⌘⌥V") + Text(" pop-up, then drag it out. Text drops as text, images drop as images, files drop as files — into TextEdit, Photoshop, Finder, an email, whatever's underneath.\n\n")
-            + Text("Heads up for Keynote, Pages, Illustrator, Word and friends: ").bold()
-            + Text("dragging into those apps drops the clip as a media file (image / PDF), because that's how their drag handler works. To round-trip a copy as an ")
-            + Text("editable").italic()
-            + Text(" shape / paragraph / vector path, ")
-            + Text("click the row").bold()
-            + Text(" in the menu (or use ") + kbd("⌘⌥V") + Text(" → a number) — that path uses the regular paste route and the source app rebuilds the original object.")
-        }
-
         stepCard(symbol: "rectangle.stack", title: "Stacks for multi-file copies") {
             Text("Copy several files in Finder and clip and cue shows them as one row with a ")
             + Text("chevron").bold()
-            + Text(" on the right. Click the chevron to fan out the individual files — each one previews, drags, and clicks-to-paste on its own. Click (or drag) the parent row to paste them all in one go.")
+            + Text(" on the right. Click the chevron to fan out the individual files — each one previews and clicks-to-paste on its own. Click the parent row to paste them all in one go.")
         }
 
         stepCard(symbol: "square.stack.3d.up", title: "Build your own stacks") {

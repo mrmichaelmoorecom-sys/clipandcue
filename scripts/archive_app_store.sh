@@ -70,9 +70,9 @@ xattr -cr "$APP"
 # under their non-root account.
 chmod -R a+rX "$APP"
 
-echo "==> codesign (Apple Distribution, hardened runtime)"
+echo "==> codesign (Apple Distribution, hardened runtime, sandboxed entitlements)"
 codesign --force --options runtime --timestamp \
-    --entitlements "$ROOT/entitlements.plist" \
+    --entitlements "$ROOT/entitlements_app_store.plist" \
     --sign "$APP_IDENTITY" "$APP"
 
 echo "==> productbuild → $PKG"
