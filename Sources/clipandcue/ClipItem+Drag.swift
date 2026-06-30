@@ -54,18 +54,6 @@ extension ClipItem {
     func dragProvider() -> NSItemProvider {
         let provider = NSItemProvider()
 
-        // Clip-id first so it's the most prominent registered type. The
-        // dropdown's `.onDrop(of: [clipIDUTI])` keys off this; any drop
-        // without it is treated as an external drop (and ignored by us).
-        let idData = id.uuidString.data(using: .utf8) ?? Data()
-        provider.registerDataRepresentation(
-            forTypeIdentifier: Self.clipIDUTI,
-            visibility: .ownProcess
-        ) { completion in
-            completion(idData, nil)
-            return nil
-        }
-
         // High-fidelity drag-out: when the clip carries a full pasteboard
         // snapshot (text / image / richText captured under v0.2.6+),
         // register *every* captured type on the provider so dragging back
@@ -90,13 +78,13 @@ extension ClipItem {
                     return nil
                 }
             }
+            registerClipID(on: provider)
             return provider
         }
 
         // Fallback path: per-kind manual registration for legacy clips
         // that don't have a snapshot (pre-v0.2.6 history, CloudKit-pulled
-        // items, files clips). Same per-type registration shape so the
-        // clip-id stays on equal footing.
+        // items, files clips).
         switch kind {
         case .text, .richText:
             if let str = text, !str.isEmpty,
@@ -145,6 +133,24 @@ extension ClipItem {
             break
         }
 
+        registerClipID(on: provider)
         return provider
+    }
+
+    /// Register the in-app grouping marker LAST on the provider. Apps that
+    /// walk the type list in registration order (Slack, Claude, clipandnote,
+    /// Notes, chat clients) used to see clip-id first and either fail to
+    /// accept the drop or treat it as a 36-byte file attachment. Our own
+    /// dropdown reads `registeredTypeIdentifiers` for the UTI so its order
+    /// doesn't affect drop-to-group — only what other apps see.
+    private func registerClipID(on provider: NSItemProvider) {
+        let idData = id.uuidString.data(using: .utf8) ?? Data()
+        provider.registerDataRepresentation(
+            forTypeIdentifier: Self.clipIDUTI,
+            visibility: .ownProcess
+        ) { completion in
+            completion(idData, nil)
+            return nil
+        }
     }
 }
