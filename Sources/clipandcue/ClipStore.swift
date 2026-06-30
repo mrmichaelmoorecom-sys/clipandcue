@@ -34,6 +34,23 @@ final class ClipStore: ObservableObject {
     /// Insert a new item at the top of the unpinned section (pinned items stay
     /// above it), deduping identical content and capping the list.
     func add(_ item: ClipItem) {
+        // Screenshot-burst dedupe: macOS's screencapture daemon writes the
+        // pasteboard in multiple passes (TIFF first, then PNG) when you
+        // ⌃⇧⌘4 to the clipboard. Each pass bumps changeCount so the
+        // monitor captures two snapshots in quick succession, with
+        // different raw bytes — so sameContent() can't dedupe them. If the
+        // top unpinned item is also an image and was added in the last
+        // ~0.8s, treat the new one as a refinement of the same capture and
+        // replace it in place.
+        if item.kind == .image,
+           let topIdx = items.firstIndex(where: { !$0.pinned }),
+           items[topIdx].kind == .image,
+           Date().timeIntervalSince(items[topIdx].createdAt) < 0.8 {
+            items[topIdx] = item
+            scheduleSave()
+            return
+        }
+
         // Preserve pin state if we already had this exact content.
         let wasPinned = items.first { $0.sameContent(as: item) }?.pinned ?? false
         items.removeAll { $0.sameContent(as: item) }
