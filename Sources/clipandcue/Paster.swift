@@ -30,6 +30,47 @@ final class Paster {
         return AXIsProcessTrustedWithOptions(options)
     }
 
+    /// Throttle so we don't pop the alert every time the user tries to paste
+    /// while permission is still missing. Reset on grant (next paste will
+    /// succeed and clear this implicitly) so it re-arms if perms are revoked.
+    private var accessibilityAlertShown = false
+
+    /// User-facing fallback when the system prompt didn't appear or was
+    /// dismissed. The TCC process-side cache means newly-granted permission
+    /// usually doesn't take effect until relaunch, so we make the relaunch
+    /// trivial with a "Quit clipandcue" button.
+    func explainAccessibilityNeeded() {
+        guard !accessibilityAlertShown else { return }
+        accessibilityAlertShown = true
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "clipandcue needs Accessibility to paste automatically"
+            alert.informativeText = """
+                Auto-paste uses the Accessibility permission to send ⌘V to the app you were just in. Without it, items only land on the clipboard and you have to paste yourself.
+
+                1. Click "Open Settings" below.
+                2. Find clipandcue in the Accessibility list and turn it on.
+                3. Quit and relaunch clipandcue — macOS only picks up the permission for already-running apps after a restart.
+                """
+            alert.addButton(withTitle: "Open Settings…")
+            alert.addButton(withTitle: "Quit clipandcue")
+            alert.addButton(withTitle: "Not Now")
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                self.requestAccessibility()
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+            case .alertSecondButtonReturn:
+                NSApp.terminate(nil)
+            default:
+                break
+            }
+        }
+    }
+
     /// Place `item` on the clipboard; if `autoPaste` and Accessibility is granted,
     /// reactivate the previous app and synthesize ⌘V.
     func deliver(_ item: ClipItem, autoPaste: Bool) {
@@ -47,6 +88,7 @@ final class Paster {
         guard autoPaste else { return }
         guard hasAccessibility else {
             requestAccessibility()
+            explainAccessibilityNeeded()
             return
         }
         targetApp?.activate(options: [.activateIgnoringOtherApps])
@@ -73,6 +115,7 @@ final class Paster {
         guard autoPaste else { return }
         guard hasAccessibility else {
             requestAccessibility()
+            explainAccessibilityNeeded()
             return
         }
         targetApp?.activate(options: [.activateIgnoringOtherApps])
