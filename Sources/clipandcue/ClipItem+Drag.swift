@@ -90,24 +90,6 @@ extension ClipItem {
                     return nil
                 }
             }
-
-            // Electron-based receivers (Slack, Claude, clipandnote, Discord, etc.)
-            // bridge drops via Chromium's DataTransfer.files API which only
-            // consumes drag operations whose payload includes a real file on
-            // disk. Raw data and NSImage object registrations alone make the
-            // receiver show the drop indicator (the MIME type is recognized)
-            // and then silently drop on release (its file list is empty).
-            // Register the rasterized image both as an NSImage object (for
-            // receivers that load by class) and as a real file-URL object
-            // (for Chromium's File API path).
-            if let imgData = snap["public.png"] ?? snap["public.tiff"] ?? snap["public.jpeg"] ?? snap["com.adobe.pdf"],
-               let img = NSImage(data: imgData) {
-                provider.registerObject(img, visibility: .all)
-                if let url = Self.writeDragTempImage(imgData, fallbackImage: img, clipID: id) {
-                    provider.registerObject(url as NSURL, visibility: .all)
-                }
-            }
-
             return provider
         }
 
@@ -150,14 +132,6 @@ extension ClipItem {
                         return nil
                     }
                 }
-                // NSImage object + file-URL registration for Electron-based
-                // receivers (see snapshot-path comment above).
-                if let img = NSImage(data: data) {
-                    provider.registerObject(img, visibility: .all)
-                    if let url = Self.writeDragTempImage(data, fallbackImage: img, clipID: id) {
-                        provider.registerObject(url as NSURL, visibility: .all)
-                    }
-                }
             }
         case .files:
             if let path = filePaths?.first {
@@ -172,37 +146,5 @@ extension ClipItem {
         }
 
         return provider
-    }
-
-    /// Write the image bytes to a temp file Chromium-based receivers can
-    /// pick up as a real File on disk. Prefers writing the original bytes
-    /// when they're already PNG/JPEG; otherwise re-encodes the NSImage to
-    /// PNG so the file has a content type Slack/Claude/clipandnote etc.
-    /// understand. Name is keyed off the clip UUID so repeat drags of the
-    /// same clip overwrite the same file (no /tmp pileup); macOS clears the
-    /// temp dir at reboot.
-    private static func writeDragTempImage(_ rawData: Data,
-                                           fallbackImage: NSImage,
-                                           clipID: UUID) -> URL? {
-        let shortID = String(clipID.uuidString.prefix(8))
-
-        // Direct write if the bytes are already in a web-loadable format.
-        let head4 = rawData.prefix(4)
-        let isPNG = head4 == Data([0x89, 0x50, 0x4E, 0x47])
-        let isJPEG = head4.prefix(3) == Data([0xFF, 0xD8, 0xFF])
-        if isPNG || isJPEG {
-            let ext = isPNG ? "png" : "jpg"
-            let url = URL(fileURLWithPath: NSTemporaryDirectory())
-                .appendingPathComponent("clipandcue-\(shortID).\(ext)")
-            return (try? rawData.write(to: url)) != nil ? url : nil
-        }
-
-        // Re-encode TIFF / PDF / anything else through NSBitmapImageRep → PNG.
-        guard let tiff = fallbackImage.tiffRepresentation,
-              let rep = NSBitmapImageRep(data: tiff),
-              let png = rep.representation(using: .png, properties: [:]) else { return nil }
-        let url = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("clipandcue-\(shortID).png")
-        return (try? png.write(to: url)) != nil ? url : nil
     }
 }
