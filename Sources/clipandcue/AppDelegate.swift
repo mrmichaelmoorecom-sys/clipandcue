@@ -21,6 +21,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
         Notifier.shared.requestAuthorization()
 
+        // Register with macOS's TCC so the app appears in System Settings →
+        // Privacy & Security → Accessibility for the user to toggle on. Without
+        // this first call the app is invisible in that list and users hit a
+        // dead end when they try to grant the permission. The system prompt
+        // fires only once per process; subsequent calls just return the bool.
+        Paster.shared.requestAccessibility()
+
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
         sc.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
