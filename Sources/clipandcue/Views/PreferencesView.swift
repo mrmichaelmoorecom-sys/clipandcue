@@ -115,12 +115,6 @@ struct PreferencesView: View {
     }
 
     private func openAccessibilitySettings() {
-        // Safety net: re-register the app in TCC before sending the user to
-        // the settings pane. If their TCC entry was wiped (sandbox transition,
-        // cdhash change between versions) the app would be missing from the
-        // list and they'd have no way to grant the permission. Calling the
-        // AX API here always re-adds it.
-        Paster.shared.requestAccessibility()
         let urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         if let url = URL(string: urlString) {
             NSWorkspace.shared.open(url)

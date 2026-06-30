@@ -6,18 +6,6 @@ extension ClipItem {
     /// instead of treating them like external drags.
     static let clipIDUTI = "com.clipandcue.clip-id"
 
-    /// Pasteboard types that cause receiving apps to materialize the drag
-    /// as a file attachment rather than inline content. Notes turns HTML
-    /// into an `.html` file; the webarchive type does the same in any app
-    /// that accepts file-style drops. We strip these only on the drag-out
-    /// path — the click-to-paste route still replays the full snapshot,
-    /// so HTML survives when the user expects it (Mail compose, browser
-    /// address bar, etc.).
-    static let dragOutSkipTypes: Set<String> = [
-        "public.html",
-        "com.apple.webarchive"
-    ]
-
     /// Sort pasteboard types so drop targets pick the highest-fidelity rep
     /// they understand. App-native private types win, then vector (PDF /
     /// SVG / RTF), then raster, then text.
@@ -66,6 +54,18 @@ extension ClipItem {
     func dragProvider() -> NSItemProvider {
         let provider = NSItemProvider()
 
+        // Clip-id first so it's the most prominent registered type. The
+        // dropdown's `.onDrop(of: [clipIDUTI])` keys off this; any drop
+        // without it is treated as an external drop (and ignored by us).
+        let idData = id.uuidString.data(using: .utf8) ?? Data()
+        provider.registerDataRepresentation(
+            forTypeIdentifier: Self.clipIDUTI,
+            visibility: .ownProcess
+        ) { completion in
+            completion(idData, nil)
+            return nil
+        }
+
         // High-fidelity drag-out: when the clip carries a full pasteboard
         // snapshot (text / image / richText captured under v0.2.6+),
         // register *every* captured type on the provider so dragging back
@@ -81,7 +81,6 @@ extension ClipItem {
         // unfamiliar types and lands on PDF/PNG.
         if let snap = pasteboardSnapshot, !snap.isEmpty {
             for typeID in Self.sortedDragTypes(snap.keys) {
-                if Self.dragOutSkipTypes.contains(typeID) { continue }
                 guard let data = snap[typeID] else { continue }
                 provider.registerDataRepresentation(
                     forTypeIdentifier: typeID,
@@ -144,22 +143,6 @@ extension ClipItem {
             // Drag-out from a collapsed group lands as nothing in the
             // destination; users can expand and drag individual children.
             break
-        }
-
-        // Clip-id LAST so the receiving app sees the real content first
-        // when it walks the type list in registration order. Apps that
-        // prefer files (Notes, chat clients) used to grab clip-id as a
-        // generic 36-byte file attachment when it was registered first.
-        // Our own dropdown reads it from `registeredTypeIdentifiers` so
-        // registration order doesn't affect the in-app drop-to-group
-        // behavior — only what other apps see.
-        let idData = id.uuidString.data(using: .utf8) ?? Data()
-        provider.registerDataRepresentation(
-            forTypeIdentifier: Self.clipIDUTI,
-            visibility: .ownProcess
-        ) { completion in
-            completion(idData, nil)
-            return nil
         }
 
         return provider

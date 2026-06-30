@@ -21,25 +21,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
         Notifier.shared.requestAuthorization()
 
-        // Register with macOS's TCC so the app appears in System Settings →
-        // Privacy & Security → Accessibility for the user to toggle on. We
-        // delay the call: a same-tick call fires before TCC and AppKit are
-        // fully up and the registration doesn't take. Once the registration
-        // call has had a chance to land, show our own explainer alert if the
-        // permission still isn't granted — the macOS system prompt is too
-        // unreliable for menu-bar apps (flashes by, gets suppressed after
-        // any prior denial) so we lead with our own clear UI.
-        let key = "didShowAccessibilityExplainerForBuild"
-        let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
-        let alreadyShownForThisBuild = UserDefaults.standard.string(forKey: key) == currentBuild
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            Paster.shared.requestAccessibility()
-            if !Paster.shared.hasAccessibility && !alreadyShownForThisBuild {
-                UserDefaults.standard.set(currentBuild, forKey: key)
-                Paster.shared.explainAccessibilityNeeded()
-            }
-        }
-
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }
         sc.onPickFile = { [weak self] idx, fileIdx in self?.pasteFile(itemIndex: idx, fileIndex: fileIdx) }
