@@ -2,10 +2,34 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Allow sending Apple events (Notes "New note") under the hardened runtime. -->
-    <key>com.apple.security.automation.apple-events</key>
+    <!-- Identifier the signed binary advertises. The App Store provisioning
+         profile carries this same value; matching them silences the 90886
+         TestFlight-ineligibility warning. (App Store *review* doesn't
+         care, but a missing match disables internal/external beta tests.) -->
+    <key>com.apple.application-identifier</key>
+    <string>HA5AB7JS87.com.clipandcue.app</string>
+
+    <!-- App Sandbox. Required by the Mac App Store; we enable it for the
+         direct-download build too so a single binary works on both
+         channels (and so we exercise the sandbox in dev, not only in
+         review). The user-granted Accessibility permission and global
+         hotkey APIs both work inside the sandbox. -->
+    <key>com.apple.security.app-sandbox</key>
     <true/>
-    <!-- CloudKit sync with the iPhone app (shared private-database container). -->
+
+    <!-- Outbound network for CloudKit sync. We don't act as a server. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Allow reading files the user explicitly hands to the app —
+         pasteboard file copies, drag-in, etc. Needed so we can generate
+         thumbnails for image / PDF file clips and so paste-back can
+         re-serve the file URL. Implicitly granted by powerbox when the
+         user selects the content (e.g. ⌘C in Finder). -->
+    <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+
+    <!-- CloudKit sync — shared private-database container. -->
     <key>com.apple.developer.icloud-container-identifiers</key>
     <array>
         <string>iCloud.com.clipandcue.shared</string>
@@ -14,11 +38,15 @@
     <array>
         <string>CloudKit</string>
     </array>
-    <!-- Receive silent CloudKit pushes for live sync (Developer ID → production APNs).
-         NOTE: macOS uses the com.apple.developer-prefixed key; the bare
-         `aps-environment` key is iOS-only and, on macOS, is treated as an
-         unauthorized restricted entitlement → "Launchd job spawn failed" at
-         launch. Must match the key the provisioning profile authorizes. -->
+    <!-- App Store ingestion requires this CloudKit container env to be an
+         explicit string ('Production' or 'Development'). An empty value
+         trips Transporter's validation. -->
+    <key>com.apple.developer.icloud-container-environment</key>
+    <string>Production</string>
+
+    <!-- Silent CloudKit push for live cross-device sync. macOS uses the
+         `com.apple.developer-` prefix; the bare `aps-environment` key is
+         iOS-only and would trip "Launchd job spawn failed" at launch. -->
     <key>com.apple.developer.aps-environment</key>
     <string>production</string>
 </dict>

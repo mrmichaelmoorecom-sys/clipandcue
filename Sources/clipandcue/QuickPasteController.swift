@@ -64,7 +64,15 @@ final class QuickPasteController: NSObject, NSWindowDelegate {
         position(panel)
 
         self.panel = panel
-        NSApp.activate(ignoringOtherApps: true)
+        // Don't `NSApp.activate(ignoringOtherApps: true)` here — that would
+        // bring clipandcue to the foreground and steal the cursor from
+        // whatever text field the user was in (which is the very thing
+        // we're about to paste into). `.nonactivatingPanel` in the style
+        // mask plus `makeKeyAndOrderFront` give the panel keyboard focus
+        // for 1-9 / ⏎ / esc *without* activating our app, so the user's
+        // previous text-field focus stays intact and the post-pick
+        // `targetApp?.activate(...)` puts the cursor right back where it
+        // started.
         panel.makeKeyAndOrderFront(nil)
         installKeyMonitor()
     }

@@ -13,9 +13,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.9</string>
+    <string>0.2.10</string>
     <key>CFBundleVersion</key>
-    <string>20</string>
+    <string>27</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
@@ -26,6 +26,17 @@
     <string>NSApplication</string>
     <key>NSHumanReadableCopyright</key>
     <string>clipandcue — freeware clipboard history utility.</string>
+    <!-- App Store export-compliance: clipandcue only uses system-provided
+         encryption (HTTPS via CloudKit, Keychain access). No custom crypto.
+         Declaring this here means App Store Connect skips the
+         App Encryption Documentation prompt on every submission. -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+    <!-- Required by App Store ingestion (Transporter validation 409) —
+         must be a UTI from the public.app-category.* namespace.
+         Productivity matches what we list on the App Store Connect page. -->
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>
