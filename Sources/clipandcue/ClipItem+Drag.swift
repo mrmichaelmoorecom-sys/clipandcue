@@ -90,6 +90,17 @@ extension ClipItem {
                     return nil
                 }
             }
+
+            // Electron-based receivers (Slack, Claude, clipandnote, Discord, etc.)
+            // bridge drops via Chromium's DataTransfer and require an NSImage
+            // *object* registration to load image drops. Raw data registrations
+            // alone make the receiver show the drop indicator and then silently
+            // drop on release because its NSImage load returns nothing.
+            if let imgData = snap["public.png"] ?? snap["public.tiff"] ?? snap["public.jpeg"] ?? snap["com.adobe.pdf"],
+               let img = NSImage(data: imgData) {
+                provider.registerObject(img, visibility: .all)
+            }
+
             return provider
         }
 
@@ -131,6 +142,11 @@ extension ClipItem {
                         completion(tiff, nil)
                         return nil
                     }
+                }
+                // NSImage object registration for Electron-based receivers
+                // (see snapshot-path comment above).
+                if let img = NSImage(data: data) {
+                    provider.registerObject(img, visibility: .all)
                 }
             }
         case .files:
