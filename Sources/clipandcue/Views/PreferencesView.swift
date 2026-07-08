@@ -81,7 +81,12 @@ struct PreferencesView: View {
                 updateRow
                 HStack(spacing: 18) {
                     linkButton("Website", "https://clipandcue.com")
-                    linkButton("GitHub", "https://github.com/mrmichaelmoorecom-sys/clipandcue")
+                    // GitHub link hidden in the App Store build — Apple's
+                    // 2.4.5(vii) rejects apps that point users at external
+                    // update / distribution channels.
+                    if !isAppStoreBuild {
+                        linkButton("GitHub", "https://github.com/mrmichaelmoorecom-sys/clipandcue")
+                    }
                     linkButton("License", "https://creativecommons.org/licenses/by-nc/4.0/")
                     Spacer()
                 }
@@ -99,18 +104,27 @@ struct PreferencesView: View {
     }
 
     /// "Check for updates" row in About — opens the latest GitHub release
-    /// page in the browser. Once we're on the Mac App Store, that channel
-    /// handles update prompts automatically; this button stays useful for
-    /// users who got the app via direct download.
+    /// page in the browser for direct-download users. Hidden in the Mac App
+    /// Store build because App Store guideline 2.4.5(vii) forbids apps
+    /// checking for updates outside the Store's own mechanism. Detected at
+    /// runtime via APP_SANDBOX_CONTAINER_ID, which is set for every
+    /// sandboxed process (including every App Store build) and unset for
+    /// our Developer ID build.
+    private var isAppStoreBuild: Bool {
+        ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+    }
+
     @ViewBuilder
     private var updateRow: some View {
-        HStack(spacing: 10) {
-            Button("Check for updates…") {
-                if let url = URL(string: "https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest") {
-                    NSWorkspace.shared.open(url)
+        if !isAppStoreBuild {
+            HStack(spacing: 10) {
+                Button("Check for updates…") {
+                    if let url = URL(string: "https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
+                Spacer()
             }
-            Spacer()
         }
     }
 
