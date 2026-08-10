@@ -44,7 +44,10 @@ final class Paster {
         }
 
         writeToPasteboard(item)
-        guard autoPaste else { return }
+        // App Store build: no Accessibility, no synthetic keystrokes
+        // (guideline 2.4.5). The clip is on the pasteboard; the user
+        // pastes with ⌘V themselves.
+        guard autoPaste, !AppBuild.isAppStore else { return }
         guard hasAccessibility else {
             requestAccessibility()
             return
@@ -70,7 +73,9 @@ final class Paster {
         // Put the first child on the pasteboard right away so the user
         // gets something usable from a manual ⌘V even without Accessibility.
         if let first = children.first { writeToPasteboard(first) }
-        guard autoPaste else { return }
+        // App Store build: sequential paste needs synthetic ⌘V, which is
+        // off-limits there (guideline 2.4.5) — first child only.
+        guard autoPaste, !AppBuild.isAppStore else { return }
         guard hasAccessibility else {
             requestAccessibility()
             return

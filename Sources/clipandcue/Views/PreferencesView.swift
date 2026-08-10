@@ -38,7 +38,12 @@ struct PreferencesView: View {
             }
 
             Section("Pasting") {
-                Toggle("Paste into the active app automatically", isOn: $settings.autoPaste)
+                // Auto-paste needs synthetic ⌘V via Accessibility, which the
+                // App Store build must not use (guideline 2.4.5) — there,
+                // picking a clip loads the clipboard and the user pastes.
+                if !AppBuild.isAppStore {
+                    Toggle("Paste into the active app automatically", isOn: $settings.autoPaste)
+                }
                 Toggle("Paste as plain text", isOn: $settings.pasteAsPlainText)
                 Text("Plain text drops fonts and colors from rich-text copies.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -55,16 +60,20 @@ struct PreferencesView: View {
                     .disabled(store.items.isEmpty)
             }
 
-            Section("Permissions") {
-                HStack {
-                    Text("Accessibility")
-                    Spacer()
-                    Text(accessibilityGranted ? "Granted" : "Not granted")
-                        .foregroundStyle(accessibilityGranted ? .green : .orange)
-                    Button("Open System Settings…") { openAccessibilitySettings() }
+            // The App Store build never requests Accessibility (2.4.5), so
+            // there is nothing to show here for it.
+            if !AppBuild.isAppStore {
+                Section("Permissions") {
+                    HStack {
+                        Text("Accessibility")
+                        Spacer()
+                        Text(accessibilityGranted ? "Granted" : "Not granted")
+                            .foregroundStyle(accessibilityGranted ? .green : .orange)
+                        Button("Open System Settings…") { openAccessibilitySettings() }
+                    }
+                    Text("Required to paste automatically into other apps.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                Text("Required to paste automatically into other apps.")
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("About") {
@@ -80,11 +89,16 @@ struct PreferencesView: View {
                 Button("How clip and cue works…") { onHowTo() }
                 updateRow
                 HStack(spacing: 18) {
-                    linkButton("Website", "https://clipandcue.com")
+                    // Store users get the Store-specific page: it documents
+                    // this build's behavior (manual ⌘V, no permissions) and
+                    // carries no DMG download or update links.
+                    linkButton("Website", AppBuild.isAppStore
+                        ? "https://clipandcue.com/appstore"
+                        : "https://clipandcue.com")
                     // GitHub link hidden in the App Store build — Apple's
                     // 2.4.5(vii) rejects apps that point users at external
                     // update / distribution channels.
-                    if !isAppStoreBuild {
+                    if !AppBuild.isAppStore {
                         linkButton("GitHub", "https://github.com/mrmichaelmoorecom-sys/clipandcue")
                     }
                     linkButton("License", "https://creativecommons.org/licenses/by-nc/4.0/")
@@ -106,17 +120,10 @@ struct PreferencesView: View {
     /// "Check for updates" row in About — opens the latest GitHub release
     /// page in the browser for direct-download users. Hidden in the Mac App
     /// Store build because App Store guideline 2.4.5(vii) forbids apps
-    /// checking for updates outside the Store's own mechanism. Detected at
-    /// runtime via APP_SANDBOX_CONTAINER_ID, which is set for every
-    /// sandboxed process (including every App Store build) and unset for
-    /// our Developer ID build.
-    private var isAppStoreBuild: Bool {
-        ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
-    }
-
+    /// checking for updates outside the Store's own mechanism.
     @ViewBuilder
     private var updateRow: some View {
-        if !isAppStoreBuild {
+        if !AppBuild.isAppStore {
             HStack(spacing: 10) {
                 Button("Check for updates…") {
                     if let url = URL(string: "https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest") {

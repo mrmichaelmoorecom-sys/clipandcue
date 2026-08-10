@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>clip and cue — App Store edition</title>
+<meta name="description" content="How the Mac App Store edition of clip and cue works, and how it differs from the direct download.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#d49aa9; --rose-deep:#a25768;
+  --ink:#2e2a2b; --ink-soft:#6a5f63; --cream:#fffdfc; --line:rgba(46,42,43,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--cream)}
+body{font-family:'Outfit',-apple-system,system-ui,sans-serif;color:var(--ink);background:linear-gradient(125deg,#fffdfc 0%,#f7ecef 45%,#fbf3f5 60%,#fffdfc 100%);line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--rose-deep);text-decoration:none;border-bottom:1px solid rgba(162,87,104,.25)}
+a:hover{border-bottom-color:var(--rose-deep)}
+.wrap{max-width:680px;margin:0 auto;padding:80px 24px 100px}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-style:italic}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);margin-bottom:48px;border-bottom:none}
+.back:hover{color:var(--ink)}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--rose-deep);font-weight:600;margin-bottom:14px}
+h1{font-size:clamp(36px,5vw,52px);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-bottom:10px}
+h1 .serif{font-weight:400;color:var(--rose-deep)}
+.lede{font-size:18px;color:var(--ink-soft);margin-bottom:40px}
+h2{font-size:22px;font-weight:600;margin-top:44px;margin-bottom:14px;letter-spacing:-.01em}
+p{margin-bottom:14px;color:var(--ink)}
+ul{margin:8px 0 18px 22px}
+li{margin-bottom:8px}
+kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;background:rgba(46,42,43,.07);border:1px solid var(--line);border-bottom-width:2px;padding:1px 7px;border-radius:6px;white-space:nowrap}
+.meta{margin-top:60px;padding-top:28px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-soft)}
+.callout{margin:28px 0;padding:18px 22px;background:rgba(255,253,252,.7);border:1px solid var(--line);border-radius:14px}
+.steps{counter-reset:step;margin:18px 0}
+.step{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:none}
+.step .n{counter-increment:step;flex:0 0 30px;height:30px;border-radius:9px;background:rgba(212,154,169,.18);color:var(--rose-deep);font-weight:700;display:flex;align-items:center;justify-content:center}
+.step .n::before{content:counter(step)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="/">← clip and cue</a>
+
+<div class="eyebrow">Mac App Store edition</div>
+<h1>Same clipboard, <span class="serif">one extra</span> keystroke.</h1>
+<p class="lede">You're here because you got clip and cue from the Mac App Store. This page covers how that edition works and the one place it differs from the version on this site.</p>
+
+<h2>The short version</h2>
+<div class="steps">
+  <div class="step"><span class="n"></span><div>Copy with <kbd>⌘C</kbd> like you always do. clip and cue remembers everything — text, images, files, design objects.</div></div>
+  <div class="step"><span class="n"></span><div>Click the paperclip in the menu bar, or press <kbd>⌘⌥V</kbd> for the numbered pop-up, and pick a clip. Your cursor stays right where it was.</div></div>
+  <div class="step"><span class="n"></span><div>Press <kbd>⌘V</kbd>. That's it. The clip lands exactly as you copied it — a Keynote shape comes back an editable shape, not a screenshot of one.</div></div>
+</div>
+
+<h2>Why the extra ⌘V?</h2>
+<p>The direct-download edition can paste for you automatically, which uses a macOS permission the Mac App Store doesn't allow apps to use for that purpose. So the App Store edition keeps things simple: picking a clip loads your clipboard, and you paste it yourself.</p>
+<div class="callout">
+<strong>The upside:</strong> this edition never asks for any system permission. No System Settings visits, no toggles, nothing to grant — and nothing to break when the app updates. Install it and start copying.
+</div>
+
+<h2>What's identical in both editions</h2>
+<ul>
+  <li>Full-fidelity capture — the complete clipboard, every format, editable round-trip back into Keynote, Illustrator, Word and friends</li>
+  <li>The quick-paste pop-up with number keys</li>
+  <li>Pins, stacks, multi-file rows with previews</li>
+  <li>Password-manager copies ignored by default</li>
+  <li>Everything stays on your Mac; optional iCloud sync through your own private database</li>
+</ul>
+
+<h2>One small difference with stacks</h2>
+<p>Pasting a whole stack in one go relies on the same automatic-paste machinery, so in this edition you fan a stack open with the chevron and grab its pieces one at a time. Multi-file rows still load all their files in a single go.</p>
+
+<h2>Updates</h2>
+<p>The App Store handles them. Nothing to check, nothing to download from here.</p>
+
+<div class="meta">
+Questions or ideas: <a href="mailto:mike@toyrobotmedia.com">mike@toyrobotmedia.com</a> · <a href="/privacy/">Privacy policy</a> · clip and cue is freeware under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>.
+</div>
+
+</div>
+</body>
+</html>

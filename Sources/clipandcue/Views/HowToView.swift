@@ -49,7 +49,11 @@ struct HowToView: View {
         }
 
         stepCard(symbol: "paperclip", title: "Open from the menu bar") {
-            Text("Click the paperclip in the menu bar to see your recent copies. Click any row to paste it into whatever app you were just using.")
+            if AppBuild.isAppStore {
+                Text("Click the paperclip in the menu bar to see your recent copies. Click any row and it's back on your clipboard — your cursor stays right where it was, so just press ") + kbd("⌘V") + Text(" to drop it in.")
+            } else {
+                Text("Click the paperclip in the menu bar to see your recent copies. Click any row to paste it into whatever app you were just using.")
+            }
         }
 
         stepCard(symbol: "command", title: "Quick-paste with the keyboard") {
@@ -57,7 +61,11 @@ struct HowToView: View {
                 Text("Press ") + kbd("⌘⌥V") + Text(" anywhere to pop up the list, then:")
             }
             VStack(alignment: .leading, spacing: 4) {
-                bullet { kbd("1") + Text("–") + kbd("9") + Text(" pastes that item") }
+                if AppBuild.isAppStore {
+                    bullet { kbd("1") + Text("–") + kbd("9") + Text(" loads that item, then ") + kbd("⌘V") + Text(" pastes it") }
+                } else {
+                    bullet { kbd("1") + Text("–") + kbd("9") + Text(" pastes that item") }
+                }
                 bullet { kbd("↑") + Text(" / ") + kbd("↓") + Text(" then ") + kbd("⏎") + Text(" to choose") }
                 bullet { kbd("esc") + Text(" to dismiss") }
             }
@@ -70,10 +78,14 @@ struct HowToView: View {
             + Text(" on a row in the menu to pin it — pinned items jump to the top and stay there, even as you keep copying. Click the badge again to unpin.")
         }
 
-        stepCard(symbol: "hand.raised", title: "First time: allow pasting") {
-            Text("To paste into other apps, macOS asks you to allow clip and cue under ")
-            + Text("System Settings → Privacy & Security → Accessibility").bold()
-            + Text(". Until then, picking an item just copies it for you to paste with ") + kbd("⌘V") + Text(".")
+        // The App Store build never touches Accessibility (2.4.5), so this
+        // onboarding step only exists for the direct-download build.
+        if !AppBuild.isAppStore {
+            stepCard(symbol: "hand.raised", title: "First time: allow pasting") {
+                Text("To paste into other apps, macOS asks you to allow clip and cue under ")
+                + Text("System Settings → Privacy & Security → Accessibility").bold()
+                + Text(". Until then, picking an item just copies it for you to paste with ") + kbd("⌘V") + Text(".")
+            }
         }
 
         stepCard(symbol: "lock", title: "Your history stays on your Mac") {
@@ -90,19 +102,35 @@ struct HowToView: View {
     @ViewBuilder
     private var advanced: some View {
         stepCard(symbol: "rectangle.stack", title: "Stacks for multi-file copies") {
-            Text("Copy several files in Finder and clip and cue shows them as one row with a ")
-            + Text("chevron").bold()
-            + Text(" on the right. Click the chevron to fan out the individual files — each one previews and clicks-to-paste on its own. Click the parent row to paste them all in one go.")
+            if AppBuild.isAppStore {
+                Text("Copy several files in Finder and clip and cue shows them as one row with a ")
+                + Text("chevron").bold()
+                + Text(" on the right. Click the chevron to fan out the individual files — each one previews and loads on its own. Click the parent row to load all the files at once, then paste them wherever they're going.")
+            } else {
+                Text("Copy several files in Finder and clip and cue shows them as one row with a ")
+                + Text("chevron").bold()
+                + Text(" on the right. Click the chevron to fan out the individual files — each one previews and clicks-to-paste on its own. Click the parent row to paste them all in one go.")
+            }
         }
 
         stepCard(symbol: "square.stack.3d.up", title: "Build your own stacks") {
-            Text("Inside the menu bar dropdown, drag any clip onto another to combine them — text, images, files, Keynote shapes, whatever — into one stack that behaves like a multi-file row. ")
-            + Text("Click the chevron").bold()
-            + Text(" to fan out the children, or click the parent row to paste them all in order. Drop more clips onto the stack to grow it. Right-click → ")
-            + Text("Rename").bold()
-            + Text(" to give it a name, or ")
-            + Text("Ungroup").bold()
-            + Text(" to flatten it back out.")
+            if AppBuild.isAppStore {
+                Text("Inside the menu bar dropdown, drag any clip onto another to combine them — text, images, files, Keynote shapes, whatever — into one stack that keeps them together. ")
+                + Text("Click the chevron").bold()
+                + Text(" to fan out the children and load any one of them for pasting. Drop more clips onto the stack to grow it. Right-click → ")
+                + Text("Rename").bold()
+                + Text(" to give it a name, or ")
+                + Text("Ungroup").bold()
+                + Text(" to flatten it back out.")
+            } else {
+                Text("Inside the menu bar dropdown, drag any clip onto another to combine them — text, images, files, Keynote shapes, whatever — into one stack that behaves like a multi-file row. ")
+                + Text("Click the chevron").bold()
+                + Text(" to fan out the children, or click the parent row to paste them all in order. Drop more clips onto the stack to grow it. Right-click → ")
+                + Text("Rename").bold()
+                + Text(" to give it a name, or ")
+                + Text("Ungroup").bold()
+                + Text(" to flatten it back out.")
+            }
         }
 
         stepCard(symbol: "key.fill", title: "Password-manager copies") {
