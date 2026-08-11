@@ -9,6 +9,15 @@ enum AppBuild {
     /// (2.4.5(vii)), or link to external distribution channels. Everything
     /// channel-specific keys off this one flag so the two behaviors can't
     /// drift apart file by file.
-    static let isAppStore =
-        ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+    /// Decided at COMPILE time: scripts/archive_app_store.sh builds with
+    /// -Xswiftc -DAPPSTORE, the Developer ID pipeline builds without it.
+    /// A compile-time constant (rather than the old APP_SANDBOX_CONTAINER_ID
+    /// env sniff) means the Store binary physically excludes the
+    /// Accessibility/CGEvent code via #if !APPSTORE, and the direct build
+    /// can't be flipped into Store mode by spoofing an env var.
+    #if APPSTORE
+    static let isAppStore = true
+    #else
+    static let isAppStore = false
+    #endif
 }

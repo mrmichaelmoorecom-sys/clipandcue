@@ -14,12 +14,17 @@ final class Notifier {
 
     private var available: Bool { Bundle.main.bundleIdentifier != nil }
 
-    func requestAuthorization() {
+    /// True once we've asked macOS for notification permission this launch.
+    /// Authorization is requested LAZILY — the first time a notification is
+    /// actually about to be shown — instead of at app launch, so a fresh
+    /// install shows zero permission dialogs until one is genuinely needed.
+    /// (Also keeps the App Store review notes literally true: the Store
+    /// build requests nothing at launch.)
+    private var didRequestAuthorization = false
+
+    /// Register notification categories only — safe at launch, no prompt.
+    func registerCategories() {
         guard available else { return }
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
-        // Register the oversized-copy category so the Open-Preferences
-        // action button appears on the notification banner.
         let openPrefs = UNNotificationAction(
             identifier: Self.openPreferencesAction,
             title: "Open Preferences",
@@ -29,7 +34,14 @@ final class Notifier {
             actions: [openPrefs],
             intentIdentifiers: [],
             options: [])
-        center.setNotificationCategories([category])
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+
+    private func requestAuthorizationIfNeeded(_ then: @escaping () -> Void) {
+        guard !didRequestAuthorization else { then(); return }
+        didRequestAuthorization = true
+        UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound]) { _, _ in then() }
     }
 
     func notifyOversized(bytes: Int, kindLabel: String) {
@@ -42,7 +54,9 @@ final class Notifier {
         content.categoryIdentifier = Self.oversizedCategory
         let request = UNNotificationRequest(identifier: UUID().uuidString,
                                             content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        requestAuthorizationIfNeeded {
+            UNUserNotificationCenter.current().add(request)
+        }
     }
 
     func notifyExportFallback() {
@@ -51,7 +65,10 @@ final class Notifier {
         content.title = "Couldn't open the export"
         content.body = "Something prevented writing the document. "
             + "For now, your list was copied to the clipboard."
-        UNUserNotificationCenter.current().add(
-            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+        let request = UNNotificationRequest(identifier: UUID().uuidString,
+                                            content: content, trigger: nil)
+        requestAuthorizationIfNeeded {
+            UNUserNotificationCenter.current().add(request)
+        }
     }
 }

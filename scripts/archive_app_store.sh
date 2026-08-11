@@ -32,10 +32,14 @@ if [[ ! -f "$PROFILE" ]]; then
     exit 1
 fi
 
-echo "==> swift build -c $CONFIG"
-swift build -c "$CONFIG"
+echo "==> swift build -c $CONFIG (APPSTORE variant, isolated scratch dir)"
+# -DAPPSTORE compiles the Store variant: AppBuild.isAppStore == true and all
+# Accessibility / CGEvent keystroke code is EXCLUDED from the binary via
+# #if !APPSTORE (guideline 2.4.5). Separate scratch path so the two channel
+# binaries never cross-contaminate incremental builds.
+swift build -c "$CONFIG" --scratch-path .build-appstore -Xswiftc -DAPPSTORE
 
-BIN="$ROOT/.build/$CONFIG/$APP_NAME"
+BIN="$ROOT/.build-appstore/$CONFIG/$APP_NAME"
 [[ -f "$BIN" ]] || { echo "error: built binary not found at $BIN" >&2; exit 1; }
 
 echo "==> assembling $APP"

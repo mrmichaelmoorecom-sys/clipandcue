@@ -9,3 +9,4 @@ scripts/fonts/
 
 # Downloaded tooling (UI/UX Pro Max skill)
 _tools/
+.build-appstore/

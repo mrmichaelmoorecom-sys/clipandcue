@@ -17,9 +17,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Routes notification button taps (e.g. the "Open Preferences"
-        // action on the oversized-copy alert) back into the app.
+        // action on the oversized-copy alert) back into the app. The
+        // permission PROMPT is deferred until the first notification is
+        // actually needed (Notifier.requestAuthorizationIfNeeded) so a fresh
+        // install shows no dialogs at launch.
         UNUserNotificationCenter.current().delegate = self
-        Notifier.shared.requestAuthorization()
+        Notifier.shared.registerCategories()
 
         let sc = StatusItemController(store: store)
         sc.onPick = { [weak self] idx in self?.paste(index: idx) }

@@ -21,6 +21,11 @@ final class Paster {
         }
     }
 
+    // Accessibility + keystroke synthesis exist ONLY in the direct-download
+    // build. The App Store build is compiled with -DAPPSTORE and contains
+    // none of these symbols (guideline 2.4.5: Accessibility may not be used
+    // for automation in Store apps).
+    #if !APPSTORE
     var hasAccessibility: Bool { AXIsProcessTrusted() }
 
     @discardableResult
@@ -29,6 +34,7 @@ final class Paster {
         let options = [key: true] as CFDictionary
         return AXIsProcessTrustedWithOptions(options)
     }
+    #endif
 
     /// Place `item` on the clipboard; if `autoPaste` and Accessibility is granted,
     /// reactivate the previous app and synthesize ⌘V.
@@ -44,10 +50,11 @@ final class Paster {
         }
 
         writeToPasteboard(item)
-        // App Store build: no Accessibility, no synthetic keystrokes
-        // (guideline 2.4.5). The clip is on the pasteboard; the user
-        // pastes with ⌘V themselves.
-        guard autoPaste, !AppBuild.isAppStore else { return }
+        // App Store build ends here: the clip is on the pasteboard and the
+        // user pastes with ⌘V themselves — no Accessibility, no synthetic
+        // keystrokes (guideline 2.4.5). Everything below is compiled out.
+        #if !APPSTORE
+        guard autoPaste else { return }
         guard hasAccessibility else {
             requestAccessibility()
             return
@@ -67,15 +74,17 @@ final class Paster {
                 self?.sendCommandV()
             }
         }
+        #endif
     }
 
     private func deliverGroup(_ children: [ClipItem], autoPaste: Bool) {
         // Put the first child on the pasteboard right away so the user
         // gets something usable from a manual ⌘V even without Accessibility.
         if let first = children.first { writeToPasteboard(first) }
-        // App Store build: sequential paste needs synthetic ⌘V, which is
-        // off-limits there (guideline 2.4.5) — first child only.
-        guard autoPaste, !AppBuild.isAppStore else { return }
+        // App Store build ends here: sequential paste needs synthetic ⌘V,
+        // which is compiled out (guideline 2.4.5) — first child only.
+        #if !APPSTORE
+        guard autoPaste else { return }
         guard hasAccessibility else {
             requestAccessibility()
             return
@@ -91,8 +100,10 @@ final class Paster {
                 self?.sendCommandV()
             }
         }
+        #endif
     }
 
+    #if !APPSTORE
     private func sendMultiFilePaste(_ paths: [String]) {
         let leadIn: TimeInterval = 0.18
         // Illustrator finishes a paste noticeably slower than Photoshop /
@@ -110,6 +121,7 @@ final class Paster {
             }
         }
     }
+    #endif
 
     /// Write one file to the pasteboard with the richest representations the
     /// content allows: always the file URL (so Finder, Mail, web inputs etc.
@@ -204,6 +216,7 @@ final class Paster {
         }
     }
 
+    #if !APPSTORE
     private func sendCommandV() {
         let src = CGEventSource(stateID: .combinedSessionState)
         let vKey: CGKeyCode = 9 // kVK_ANSI_V
@@ -214,4 +227,5 @@ final class Paster {
         down?.post(tap: .cgAnnotatedSessionEventTap)
         up?.post(tap: .cgAnnotatedSessionEventTap)
     }
+    #endif
 }

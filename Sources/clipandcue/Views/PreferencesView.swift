@@ -8,7 +8,11 @@ struct PreferencesView: View {
     var onHowTo: () -> Void = {}
 
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
+    // Accessibility status only exists in the direct-download build — the
+    // Store build is compiled without any AX API (guideline 2.4.5).
+    #if !APPSTORE
     @State private var accessibilityGranted = Paster.shared.hasAccessibility
+    #endif
 
     private var version: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
@@ -60,21 +64,21 @@ struct PreferencesView: View {
                     .disabled(store.items.isEmpty)
             }
 
-            // The App Store build never requests Accessibility (2.4.5), so
-            // there is nothing to show here for it.
-            if !AppBuild.isAppStore {
-                Section("Permissions") {
-                    HStack {
-                        Text("Accessibility")
-                        Spacer()
-                        Text(accessibilityGranted ? "Granted" : "Not granted")
-                            .foregroundStyle(accessibilityGranted ? .green : .orange)
-                        Button("Open System Settings…") { openAccessibilitySettings() }
-                    }
-                    Text("Required to paste automatically into other apps.")
-                        .font(.caption).foregroundStyle(.secondary)
+            // The App Store build is compiled without any Accessibility code
+            // (2.4.5), so there is nothing to show here for it.
+            #if !APPSTORE
+            Section("Permissions") {
+                HStack {
+                    Text("Accessibility")
+                    Spacer()
+                    Text(accessibilityGranted ? "Granted" : "Not granted")
+                        .foregroundStyle(accessibilityGranted ? .green : .orange)
+                    Button("Open System Settings…") { openAccessibilitySettings() }
                 }
+                Text("Required to paste automatically into other apps.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
+            #endif
 
             Section("About") {
                 HStack(spacing: 12) {
@@ -108,7 +112,11 @@ struct PreferencesView: View {
         }
         .formStyle(.grouped)
         .frame(width: 440, height: 560)
-        .onAppear { accessibilityGranted = Paster.shared.hasAccessibility }
+        .onAppear {
+            #if !APPSTORE
+            accessibilityGranted = Paster.shared.hasAccessibility
+            #endif
+        }
     }
 
     private func linkButton(_ title: String, _ urlString: String) -> some View {
@@ -135,12 +143,14 @@ struct PreferencesView: View {
         }
     }
 
+    #if !APPSTORE
     private func openAccessibilitySettings() {
         let urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         if let url = URL(string: urlString) {
             NSWorkspace.shared.open(url)
         }
     }
+    #endif
 }
 
 /// Click-to-record button that captures the next modified key press and
