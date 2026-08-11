@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>clip and cue — Copy now. Paste later.</title>
-<meta name="description" content="A tiny macOS menu bar utility that remembers your last 9 clipboard copies so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
+<meta name="description" content="A tiny macOS menu bar utility that remembers your recent clipboard copies (9 by default, up to 50) so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
 <link rel="icon" href="img/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="img/appicon_256.png">
 <link rel="canonical" href="https://clipandcue.com/">
@@ -17,7 +17,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="clip and cue">
 <meta property="og:title" content="clip and cue — Copy now. Paste later.">
-<meta property="og:description" content="A tiny macOS menu bar utility that remembers your last 9 clipboard copies so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
+<meta property="og:description" content="A tiny macOS menu bar utility that remembers your recent clipboard copies (9 by default, up to 50) so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
 <meta property="og:url" content="https://clipandcue.com/">
 <meta property="og:image" content="https://clipandcue.com/img/og-image.png?v=3">
 <meta property="og:image:width" content="1200">
@@ -27,7 +27,7 @@
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="clip and cue — Copy now. Paste later.">
-<meta name="twitter:description" content="Remembers your last 9 clipboard copies so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
+<meta name="twitter:description" content="Remembers your recent clipboard copies (9 by default, up to 50) so you can paste any of them back — by click, or ⌘⌥V then 1–9.">
 <meta name="twitter:image" content="https://clipandcue.com/img/og-image.png?v=3">
 
 <!-- Structured data: machine-readable facts for search engines and AI assistants -->
@@ -39,23 +39,23 @@
   "operatingSystem": "macOS 13.0 or later",
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "Clipboard Manager",
-  "description": "A tiny macOS menu bar utility that remembers your last 9 clipboard copies — text, rich text, images, and files — so you can paste any of them back by click, or Command-Option-V then 1–9. It auto-pastes into the app you were just using.",
+  "description": "A tiny macOS menu bar utility that remembers your recent clipboard copies (9 by default, up to 50) — text, rich text, images, and files — so you can paste any of them back by click, or Command-Option-V then 1–9. It auto-pastes into the app you were just using.",
   "url": "https://clipandcue.com/",
   "image": "https://clipandcue.com/img/og-image.png?v=3",
   "screenshot": "https://clipandcue.com/img/og-image.png?v=3",
   "downloadUrl": "https://github.com/mrmichaelmoorecom-sys/clipandcue/releases/latest/download/clipandcue.dmg",
   "installUrl": "https://clipandcue.com/#download",
-  "softwareVersion": "0.2.1",
+  "softwareVersion": "0.2.24",
   "softwareRequirements": "macOS 13.0 or later",
   "fileSize": "2MB",
-  "dateModified": "2026-06-05",
+  "dateModified": "2026-07-08",
   "license": "https://creativecommons.org/licenses/by-nc/4.0/",
   "isAccessibleForFree": true,
   "author": { "@type": "Person", "name": "Michael Moore" },
   "publisher": { "@type": "Person", "name": "Michael Moore" },
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "featureList": [
-    "Remembers the last 9 clipboard copies in a numbered, de-duplicated history",
+    "Remembers your recent copies (9 by default, up to 50) in a numbered, de-duplicated history",
     "Captures plain text, rich text, images, and copied files",
     "Recall with Command-Option-V then 1–9, or arrow keys and Return",
     "Auto-pastes the selected item into the previously active app",
@@ -81,7 +81,7 @@
     {
       "@type": "Question",
       "name": "What is clip and cue?",
-      "acceptedAnswer": { "@type": "Answer", "text": "A tiny macOS menu bar clipboard manager that remembers your last 9 clipboard copies — text, rich text, images, and files — so you can paste any of them back later." }
+      "acceptedAnswer": { "@type": "Answer", "text": "A tiny macOS menu bar clipboard manager that remembers your recent clipboard copies (9 by default, up to 50) — text, rich text, images, and files — so you can paste any of them back later." }
     },
     {
       "@type": "Question",
@@ -101,7 +101,7 @@
     {
       "@type": "Question",
       "name": "Where is my clipboard history stored?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Your history is stored on your own Mac and can be wiped any time with Clear. Copies above the size cap (default 20 MB) are skipped." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Your history is stored on your own Mac (optionally synced through your private iCloud database if you turn sync on) and can be wiped any time with Clear. Copies above the size cap (default 50 MB) are skipped." }
     }
   ]
 }
@@ -564,7 +564,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
       <div class="copy">
         <div class="stepnum">2</div>
         <h3>Summon the panel — ⌘⌥V</h3>
-        <p>A floating picker appears right where you're working. Press <span class="kbd">1</span>–<span class="kbd">9</span> to grab an item, or arrow through with <span class="kbd">↑</span> <span class="kbd">↓</span> and hit <span class="kbd">⏎</span>. <span class="kbd">Esc</span> dismisses it.</p>
+        <p>A floating picker appears over whatever you're doing. Press <span class="kbd">1</span>–<span class="kbd">9</span> to grab an item, or arrow through with <span class="kbd">↑</span> <span class="kbd">↓</span> and hit <span class="kbd">⏎</span>. <span class="kbd">Esc</span> dismisses it.</p>
       </div>
       <div class="demo">
         <div class="panel" id="paneldemo">
@@ -736,7 +736,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
             <li>You must give <strong>appropriate attribution</strong> to the author.</li>
             <li><strong>Commercial use is not permitted</strong> without permission.</li>
             <li>The software is provided <strong>“as is”</strong>, with no warranty, and the author is not liable for any damages or data loss.</li>
-            <li>Your clipboard history is stored <strong>unencrypted on your own Mac</strong> and is never transmitted anywhere — you're responsible for clearing sensitive items.</li>
+            <li>Your clipboard history is stored <strong>unencrypted on your own Mac</strong> and is never transmitted anywhere unless you turn on the optional iCloud sync in Preferences — you're responsible for clearing sensitive items.</li>
             <li>The app is <strong>signed with a Developer ID and notarized by Apple</strong>, so it opens normally — no security warning.</li>
           </ul>
           <p class="more"><a href="LICENSE" target="_blank" rel="noopener" class="tlink">Read the full license text &#8599;</a></p>
@@ -755,7 +755,7 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
            Download for macOS
         </a>
       </div>
-      <p class="dlmeta" id="dlmeta">v0.2.6 &middot; released June 24, 2026</p>
+      <p class="dlmeta" id="dlmeta">v0.2.24 &middot; released July 8, 2026</p>
       <p class="dlnote" id="dlnote">Tick the box to enable the download.</p>
     </div>
   </div>
@@ -775,13 +775,13 @@ footer .fine{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,
         <a href="https://clipandnote.com" target="_blank" rel="noopener">clipandnote</a>
         <a href="LICENSE" target="_blank" rel="noopener">License</a>
         <a href="https://github.com/mrmichaelmoorecom-sys/clipandcue/" id="ghlink" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/mrmichaelmoorecom-sys/clipandcue/issues/new?labels=bug&title=Bug%20report&body=**What%20happened%3F**%0A%0A**Steps%20to%20reproduce%3A**%0A1.%20%0A2.%20%0A%0A**macOS%20version%3A**%20%0A**clip%20and%20cue%20version%3A**%200.1.0" target="_blank" rel="noopener">Report a bug</a>
+        <a href="https://github.com/mrmichaelmoorecom-sys/clipandcue/issues/new?labels=bug&title=Bug%20report&body=**What%20happened%3F**%0A%0A**Steps%20to%20reproduce%3A**%0A1.%20%0A2.%20%0A%0A**macOS%20version%3A**%20%0A**clip%20and%20cue%20version%3A**%20" target="_blank" rel="noopener">Report a bug</a>
         <a href="https://buymeacoffee.com/mrmichaelmoore" target="_blank" rel="noopener">☕ Buy me a coffee</a>
       </div>
     </div>
     <div class="fine">
       © <span id="yr"></span> Michael Moore · clip and cue · Licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener" style="color:#e9c9d1;text-decoration:underline">CC BY-NC 4.0</a> · Requires macOS 13 or later.<br>
-      A tiny menu bar utility that remembers your last nine clipboard copies.
+      A tiny menu bar utility that remembers your recent clipboard copies.
     </div>
   </div>
 </footer>
